@@ -1,6 +1,7 @@
 import { defineConfig } from '@adonisjs/auth'
 import { tokensGuard, tokensUserProvider } from '@adonisjs/auth/access_tokens'
 import type { InferAuthenticators, InferAuthEvents, Authenticators } from '@adonisjs/auth/types'
+import { drivers } from '@adonisjs/core/hash'
 
 const authConfig = defineConfig({
   default: 'api',
@@ -8,14 +9,33 @@ const authConfig = defineConfig({
     api: tokensGuard({
       provider: tokensUserProvider({
         tokens: 'accessTokens',
-        model: () => import('#models/user')
+        model: () => import('#models/user'),
       }),
     }),
   },
 })
 
-export default authConfig
+const autoConfig = {
+  guard: 'api',
+  guards: {
+    api: {
+      driver: 'oat',
+      tokenProvider: {
+        type: 'api',
+        driver: 'database',
+        table: 'login',
+      },
+      provider: {
+        driver: 'lucid',
+        identifierKey: 'id',
+        uids: ['email'],
+        model: () => import('../app/models/user.js'),
+      },
+    },
+  },
+}
 
+export default authConfig ; autoConfig
 /**
  * Inferring types from the configured auth
  * guards.
