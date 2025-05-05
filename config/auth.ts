@@ -35,7 +35,8 @@ const autoConfig = {
   },
 }
 
-export default authConfig ; autoConfig
+export default authConfig
+autoConfig
 /**
  * Inferring types from the configured auth
  * guards.
