@@ -18,7 +18,7 @@ export default class extends BaseSchema {
         .unsigned()
         .notNullable()
         .references('id')
-        .inTable('estados_ticket')
+        .inTable('estado_tickets')
         .onDelete('CASCADE')
       table.text('comentario').nullable()
       table.timestamp('fecha_cambio', { useTz: true }).defaultTo(this.now())

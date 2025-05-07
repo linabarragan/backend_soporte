@@ -5,9 +5,9 @@ export default class extends BaseSchema {
 
   async up() {
     this.schema.createTable(this.tableName, (table) => {
-      table.increments('id')
+      table.increments('id').notNullable()
       table.string('titulo', 255).notNullable()
-      table.text('descripcion').nullable()
+      table.text('descripcion').notNullable()
       table
         .integer('estado_id')
         .unsigned()
@@ -19,7 +19,7 @@ export default class extends BaseSchema {
         .integer('prioridad_id')
         .unsigned()
         .references('id')
-        .inTable('prioridades')
+        .inTable('prioridads')
         .onDelete('SET NULL')
       table
         .integer('cliente_id')
