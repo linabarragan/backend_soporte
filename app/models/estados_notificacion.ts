@@ -1,6 +1,7 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, hasMany, HasMany } from '@ioc:Adonis/Lucid/Orm'
-import Notificacion from './Notificacion'
+import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
+import type { HasMany } from '@adonisjs/lucid/types/relations'
+import Notificacion from '../models/notificaciones.js'
 
 export default class EstadoNotificacion extends BaseModel {
   @column({ isPrimary: true })
