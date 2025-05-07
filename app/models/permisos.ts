@@ -1,7 +1,9 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, manyToMany, ManyToMany } from '@ioc:Adonis/Lucid/Orm'
-import Rol from './Rol'
-import Item from './Item'
+import { BaseModel, column, manyToMany } from '@adonisjs/lucid/orm'
+import type { ManyToMany } from '@adonisjs/lucid/types/relations'
+
+import Rol from '../models/roles.js'
+import Item from '../models/items.js'
 
 export default class Permiso extends BaseModel {
   @column({ isPrimary: true })

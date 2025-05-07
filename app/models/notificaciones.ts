@@ -1,27 +1,30 @@
 import { DateTime } from 'luxon'
 import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
-import Categoria from '../models/categorias.js'
+import Usuario from '../models/usuarios.js'
 
-export default class Servicio extends BaseModel {
+export default class Notificacion extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
   @column()
-  declare nombre: string
+  declare titulo: string
 
   @column()
-  declare descripcion: string
+  declare mensaje: string
 
   @column()
-  declare categoriaId: number
-
-  @belongsTo(() => Categoria)
-  declare categoria: BelongsTo<typeof Categoria>
+  declare usuarioId: number
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
+
+  @column()
+  declare leido: boolean
+
+  @belongsTo(() => Usuario)
+  declare usuario: BelongsTo<typeof Usuario>
 }
