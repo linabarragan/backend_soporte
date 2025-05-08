@@ -1,7 +1,7 @@
 import { defineConfig } from '@adonisjs/auth'
 import { tokensGuard, tokensUserProvider } from '@adonisjs/auth/access_tokens'
 import type { InferAuthenticators, InferAuthEvents, Authenticators } from '@adonisjs/auth/types'
-import { drivers } from '@adonisjs/core/hash'
+//import { drivers } from '@adonisjs/core/hash'
 
 const authConfig = defineConfig({
   default: 'api',
@@ -9,7 +9,7 @@ const authConfig = defineConfig({
     api: tokensGuard({
       provider: tokensUserProvider({
         tokens: 'accessTokens',
-        model: () => import('#models/user'),
+        model: () => import('#models/usuarios'),
       }),
     }),
   },
@@ -29,7 +29,7 @@ const autoConfig = {
         driver: 'lucid',
         identifierKey: 'id',
         uids: ['email'],
-        model: () => import('../app/models/user.js'),
+        model: () => import('../app/models/usuarios.js'),
       },
     },
   },

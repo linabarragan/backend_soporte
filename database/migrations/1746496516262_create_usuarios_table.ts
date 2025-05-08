@@ -12,13 +12,6 @@ export default class extends BaseSchema {
       table.string('correo', 255).notNullable().unique()
       table.string('password', 180).notNullable()
 
-      table
-        .integer('empresa_id')
-        .unsigned()
-        .notNullable()
-        .references('id')
-        .inTable('empresas')
-        .onDelete('CASCADE')
       table.timestamp('created_at')
       table.timestamp('updated_at')
     })
