@@ -3,7 +3,7 @@ import Usuario from '#models/usuarios'
 
 export default class extends BaseSeeder {
   async run() {
-    const usuario = await Usuario.create({
+    await Usuario.create({
       nombre: 'Laura',
       apellido: 'González',
       telefono: '3001234567',

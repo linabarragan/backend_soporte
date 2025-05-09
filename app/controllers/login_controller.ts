@@ -1,8 +1,8 @@
-import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
+/*import type { HttpContext } from '@adonisjs/core/http'
 import { schema, rules } from '@ioc:Adonis/Core/Validator'
 
 export default class LoginController {
-  public async login({ auth, request, response }: HttpContextContract) {
+  public async createUser({ auth, request, response }: HttpContext) {
     // Validación de entrada
     const loginSchema = schema.create({
       email: schema.string({}, [rules.email()]),
@@ -28,4 +28,4 @@ export default class LoginController {
       })
     }
   }
-}
+}*/
