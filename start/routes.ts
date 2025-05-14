@@ -14,3 +14,8 @@ router
 router.post('/login', '#controllers/auth_controller.login')
 
 router.post('/user', '#controllers/login_controller.createUser')
+
+router.group(() => {
+  router.get('/tickets', '#controllers/TicketsController.list')
+  router.post('/tickets', '#controllers/TicketsController.store')
+})
