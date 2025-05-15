@@ -1,11 +1,26 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import User from '#models/usuarios'
+import Usuario from '#models/usuarios'
 
 export default class AuthController {
-  async login({ request }: HttpContext) {
+  public async login({ request, response }: HttpContext) {
     const { correo, password } = request.only(['correo', 'password'])
-    const user = await User.verifyCredentials(correo, password)
-    const token = await User.accessTokens.create(user)
-    return token
+
+    try {
+      const user = await Usuario.verifyCredentials(correo, password)
+      const token = await Usuario.accessTokens.create(user) // Crea token de acceso
+
+      return {
+        type: 'bearer',
+        token: token.value, // Enviar el valor del token
+        user: {
+          id: user.id,
+          correo: user.correo,
+        },
+      }
+    } catch (error) {
+      return response.unauthorized({
+        message: 'Correo o contraseña inválidos',
+      })
+    }
   }
 }
