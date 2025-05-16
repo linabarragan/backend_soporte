@@ -11,7 +11,7 @@ export default class TicketsController {
     const data = request.only([
       'titulo',
       'descripcion',
-      'estado',
+      'estado_id',
       'prioridad',
       'cliente',
       'usuarioasignado',

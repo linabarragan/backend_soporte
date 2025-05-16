@@ -14,6 +14,14 @@ export default class extends BaseSchema {
         .references('id')
         .inTable('usuarios')
         .onDelete('CASCADE')
+
+      table
+        .integer('estado_id')
+        .unsigned()
+        .references('id')
+        .inTable('estado_notificacions')
+        .onDelete('CASCADE')
+
       table.boolean('leido').defaultTo(false)
       table.timestamp('created_at')
       table.timestamp('updated_at')
