@@ -5,7 +5,6 @@ import Cliente from '../models/clientes.js'
 import Usuario from '../models/usuarios.js'
 import Categoria from '../models/categorias.js'
 import Servicio from '../models/servicios.js'
-import Proyecto from '../models/proyectos.js'
 import EstadoTicket from '../models/estados_ticket.js'
 import Prioridad from '../models/prioridades.js'
 
@@ -37,9 +36,6 @@ export default class Ticket extends BaseModel {
   @column()
   declare servicioId: number
 
-  @column()
-  declare proyectoId: number
-
   @column.dateTime({ autoCreate: true })
   declare fechaAsignacion: DateTime
 
@@ -60,9 +56,6 @@ export default class Ticket extends BaseModel {
 
   @belongsTo(() => Servicio)
   declare servicio: BelongsTo<typeof Servicio>
-
-  @belongsTo(() => Proyecto)
-  declare proyecto: BelongsTo<typeof Proyecto>
 
   @belongsTo(() => EstadoTicket, { foreignKey: 'estadoId' })
   declare estado: BelongsTo<typeof EstadoTicket>

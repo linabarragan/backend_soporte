@@ -48,12 +48,6 @@ export default class extends BaseSchema {
         .references('id')
         .inTable('servicios')
         .onDelete('CASCADE')
-      table
-        .integer('proyecto_id')
-        .unsigned()
-        .references('id')
-        .inTable('proyectos')
-        .onDelete('SET NULL')
       table.timestamp('fecha_asignacion', { useTz: true }).defaultTo(this.now())
       table.timestamp('created_at')
       table.timestamp('updated_at')
