@@ -2,6 +2,7 @@ import { DateTime } from 'luxon'
 import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Usuario from '../models/usuarios.js'
+import EstadoNotificacion from './estados_notificacion.js'
 
 export default class Notificacion extends BaseModel {
   @column({ isPrimary: true })
@@ -16,6 +17,9 @@ export default class Notificacion extends BaseModel {
   @column()
   declare usuarioId: number
 
+  @column()
+  declare estadoId: number
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
@@ -27,4 +31,9 @@ export default class Notificacion extends BaseModel {
 
   @belongsTo(() => Usuario)
   declare usuario: BelongsTo<typeof Usuario>
+
+  @belongsTo(() => EstadoNotificacion, {
+    foreignKey: 'estadoId',
+  })
+  declare estado: BelongsTo<typeof EstadoNotificacion>
 }

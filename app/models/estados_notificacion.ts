@@ -19,6 +19,8 @@ export default class EstadoNotificacion extends BaseModel {
   @column.dateTime({ autoUpdate: true, autoCreate: true })
   declare updatedAt: DateTime
 
-  @hasMany(() => Notificacion)
+  @hasMany(() => Notificacion, {
+    foreignKey: 'estadoId',
+  })
   declare notificaciones: HasMany<typeof Notificacion>
 }
