@@ -6,6 +6,7 @@ import EstadoTicket from '../models/estados_ticket.js'
 import Usuario from '../models/usuarios.js'
 
 export default class HistorialEstadosTicket extends BaseModel {
+  public static table = 'historial_estado_tickets'
   @column({ isPrimary: true })
   declare id: number
 

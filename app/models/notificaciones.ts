@@ -5,6 +5,7 @@ import Usuario from '../models/usuarios.js'
 import EstadoNotificacion from './estados_notificacion.js'
 
 export default class Notificacion extends BaseModel {
+  public static table = 'notificacions'
   @column({ isPrimary: true })
   declare id: number
 

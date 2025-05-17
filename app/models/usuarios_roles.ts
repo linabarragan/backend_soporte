@@ -4,6 +4,7 @@ import Usuario from './usuarios.js'
 import Rol from './roles.js'
 
 export default class UsuariosRol extends BaseModel {
+  public static table = 'usuario_rols'
   @column({ isPrimary: true })
   declare id: number
 
