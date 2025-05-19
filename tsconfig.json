@@ -4,6 +4,13 @@
     "rootDir": "./",
     "outDir": "./build",
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "baseUrl": ".",                             
+    "paths": {                                    
+      "#controllers/*": ["app/controllers/*"],
+      "#models/*": ["app/models/*"],
+      "#services/*": ["app/services/*"],
+      "#validators/*": ["app/validators/*"]
+    }
   }
 }
