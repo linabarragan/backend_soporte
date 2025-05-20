@@ -1,10 +1,24 @@
 import router from '@adonisjs/core/services/router'
+
 import { middleware } from '#start/kernel'
+import UsuariosController from '#controllers/usuarios_controller'
+// import Route from '@ioc:Adonis/Core/Route'
+
+const usuariosController = new UsuariosController()
 
 router.get('/', async () => {
   return {
     hello: 'world',
   }
+})
+
+router.get('/usuarios', async (ctx) => {
+  // ctx es de tipo HttpContext completo
+  return usuariosController.index?.(ctx) ?? ctx.response.json({ message: 'Sin método index' })
+})
+
+router.post('/usuarios', async (ctx) => {
+  return usuariosController.store(ctx)
 })
 
 router
