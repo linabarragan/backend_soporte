@@ -20,19 +20,29 @@ export default class UsersController {
     return response.created(user)
   }
 
-  async update({ params, request, response }: HttpContext) {
-    const user = await Usuario.find(params.id)
-    if (!user) {
-      return response.notFound({ message: 'Usuario no encontrado' })
-    }
-
-    const data = request.only(['nombre', 'apellido', 'telefono', 'correo', 'password'])
-
-    user.merge(data)
-    await user.save()
-
-    return response.ok(user)
+ async update({ params, request, response }: HttpContext) {
+  const user = await Usuario.find(params.id)
+  if (!user) {
+    return response.notFound({ message: 'Usuario no encontrado' })
   }
+
+  // Obtener solo los campos que quieres actualizar
+  const data = request.only(['nombre', 'apellido', 'telefono', 'correo', 'password'])
+
+  // Si password viene vacío o null, eliminarlo para no actualizarlo
+  if (!data.password) {
+    delete data.password
+  } else {
+    // Aquí puedes hashear la contraseña antes de guardarla, por seguridad
+    // Ejemplo con hash (si tienes el paquete instalado):
+    // data.password = await Hash.make(data.password)
+  }
+
+  user.merge(data)
+  await user.save()
+
+  return response.ok(user)
+}
 
   public async destroy({ params, response }: HttpContextContract) {
     const user = await Usuario.findOrFail(params.id)
