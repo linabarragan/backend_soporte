@@ -1,46 +1,48 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import Usuario from '../models/usuarios.js'
-import Hash from '@adonisjs/core/services/hash'
+// import hash from '@adonisjs/core/services/hash'
+// import { inject } from '@adonisjs/core'
 
-export default class UsuariosController {
-  async index({ response }: HttpContext) {
-    const usuarios = await Usuario.all()
-    return response.ok(usuarios)
+export default class UsersController {
+
+  async index() {
+    return await Usuario.all()
   }
 
   async store({ request, response }: HttpContext) {
     const data = request.only(['nombre', 'apellido', 'telefono', 'correo', 'password'])
 
-    const usuario = await Usuario.create({
-      nombre: data.nombre,
-      apellido: data.apellido,
-      telefono: data.telefono,
-      correo: data.correo,
-      password: await Hash.make(data.password),
+    console.log('Contraseña antes de guardar:', data.password)
+    const user = await Usuario.create({
+      ...data,
     })
-    console.log('usuarioPayload:', usuario)
-    return response.created(usuario)
-  }
-
-  async show({ params, response }: HttpContext) {
-    const usuario = await Usuario.findOrFail(params.id)
-    return response.ok(usuario)
+    console.log('Contraseña guardada en la BD:', user.password)
+    return response.created(user)
   }
 
   async update({ params, request, response }: HttpContext) {
-    const usuario = await Usuario.findOrFail(params.id)
-    const data = request.only(['nombre', 'apellido', 'telefono', 'correo'])
+    const user = await Usuario.find(params.id)
+    if (!user) {
+      return response.notFound({ message: 'Usuario no encontrado' })
+    }
 
-    usuario.merge(data)
-    await usuario.save()
+    const data = request.only(['nombre', 'apellido', 'telefono', 'correo', 'password'])
 
-    return response.ok(usuario)
+    user.merge(data)
+    await user.save()
+
+    return response.ok(user)
   }
 
-  async destroy({ params, response }: HttpContext) {
-    const usuario = await Usuario.findOrFail(params.id)
-    await usuario.delete()
+  public async destroy({ params, response }: HttpContextContract) {
+    const user = await Usuario.findOrFail(params.id)
+    if (!user) {
+      return response.notFound({ message: 'Usuario no encontrado' })
+    }
 
-    return response.noContent()
+    await user.delete()
+    return response.ok({ mensaje: 'Usuario eliminado correctamente' })
   }
 }
+
+

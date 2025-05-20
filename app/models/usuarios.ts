@@ -1,11 +1,11 @@
 import { DateTime } from 'luxon'
-import hash from '@adonisjs/core/services/hash'
+import Hash from '@adonisjs/core/services/hash'
 import { compose } from '@adonisjs/core/helpers'
 import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
 import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
 
-const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
+const AuthFinder = withAuthFinder(() => Hash.use('scrypt'), {
   uids: ['correo'],
   passwordColumnName: 'password',
 })
@@ -26,7 +26,7 @@ export default class Usuario extends compose(BaseModel, AuthFinder) {
   @column()
   declare correo: string
 
-  @column({ serializeAs: null })
+  @column()
   declare password: string
 
   @column.dateTime({ autoCreate: true })
