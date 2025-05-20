@@ -1,0 +1,33 @@
+import factory from '@adonisjs/lucid/factories'
+import { faker } from '@faker-js/faker'
+import { DateTime } from 'luxon'
+import Ticket from '#models/tickets'
+import Cliente from '#models/clientes'
+import Usuario from '#models/usuarios'
+import Categoria from '#models/categorias'
+import Servicio from '#models/servicios'
+import EstadoTicket from '#models/estados_ticket'
+import Prioridad from '#models/prioridades'
+
+export const TicketFactory = factory
+  .define(Ticket, async () => {
+    const cliente = await Cliente.query().select('id').orderByRaw('RAND()').firstOrFail()
+    const usuario = await Usuario.query().select('id').orderByRaw('RAND()').firstOrFail()
+    const categoria = await Categoria.query().select('id').orderByRaw('RAND()').firstOrFail()
+    const servicio = await Servicio.query().select('id').orderByRaw('RAND()').firstOrFail()
+    const estado = await EstadoTicket.query().select('id').orderByRaw('RAND()').firstOrFail()
+    const prioridad = await Prioridad.query().select('id').orderByRaw('RAND()').firstOrFail()
+
+    return {
+      titulo: faker.lorem.sentence(),
+      descripcion: faker.lorem.paragraph(),
+      estadoId: estado.id,
+      prioridadId: prioridad.id,
+      clienteId: cliente.id,
+      usuarioAsignadoId: usuario.id,
+      categoriaId: categoria.id,
+      servicioId: servicio.id,
+      fechaAsignacion: DateTime.fromJSDate(faker.date.recent()), // ✅ FIX aquí
+    }
+  })
+  .build()
