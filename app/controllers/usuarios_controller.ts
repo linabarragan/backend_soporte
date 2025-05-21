@@ -44,7 +44,7 @@ export default class UsersController {
   return response.ok(user)
 }
 
-  public async destroy({ params, response }: HttpContextContract) {
+  public async destroy({ params, response }: HttpContext) {
     const user = await Usuario.findOrFail(params.id)
     if (!user) {
       return response.notFound({ message: 'Usuario no encontrado' })
