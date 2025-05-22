@@ -3,7 +3,6 @@ import Usuario from '#models/usuarios'
 import hash from '@adonisjs/core/services/hash'
 
 export default class AuthController {
-  
   public async login({ request, response }: HttpContext) {
     const { correo, password } = request.only(['correo', 'password'])
 
@@ -24,6 +23,7 @@ export default class AuthController {
         user: {
           id: user.id,
           correo: user.correo,
+          nombre: user.nombre,
         },
       }
     } catch (error) {
