@@ -22,13 +22,6 @@ export default class extends BaseSchema {
         .inTable('prioridads')
         .onDelete('SET NULL')
       table
-        .integer('cliente_id')
-        .unsigned()
-        .notNullable()
-        .references('id')
-        .inTable('clientes')
-        .onDelete('CASCADE')
-      table
         .integer('usuario_asignado_id')
         .unsigned()
         .references('id')

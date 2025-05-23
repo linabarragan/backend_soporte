@@ -1,7 +1,6 @@
 import { DateTime } from 'luxon'
 import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
-import Cliente from '../models/clientes.js'
 import Usuario from '../models/usuarios.js'
 import Categoria from '../models/categorias.js'
 import Servicio from '../models/servicios.js'
@@ -25,9 +24,6 @@ export default class Ticket extends BaseModel {
   declare prioridadId: number
 
   @column()
-  declare clienteId: number
-
-  @column()
   declare usuarioAsignadoId: number
 
   @column()
@@ -44,9 +40,6 @@ export default class Ticket extends BaseModel {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
-
-  @belongsTo(() => Cliente)
-  declare cliente: BelongsTo<typeof Cliente>
 
   @belongsTo(() => Usuario, { foreignKey: 'usuarioAsignadoId' })
   declare usuarioAsignado: BelongsTo<typeof Usuario>
