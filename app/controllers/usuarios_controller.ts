@@ -4,7 +4,6 @@ import Usuario from '../models/usuarios.js'
 // import { inject } from '@adonisjs/core'
 
 export default class UsersController {
-
   async index() {
     return await Usuario.all()
   }
@@ -20,29 +19,29 @@ export default class UsersController {
     return response.created(user)
   }
 
- async update({ params, request, response }: HttpContext) {
-  const user = await Usuario.find(params.id)
-  if (!user) {
-    return response.notFound({ message: 'Usuario no encontrado' })
+  async update({ params, request, response }: HttpContext) {
+    const user = await Usuario.find(params.id)
+    if (!user) {
+      return response.notFound({ message: 'Usuario no encontrado' })
+    }
+
+    // Obtener solo los campos que quieres actualizar
+    const data = request.only(['nombre', 'apellido', 'telefono', 'correo', 'password'])
+
+    // Si password viene vacío o null, eliminarlo para no actualizarlo
+    if (!data.password) {
+      delete data.password
+    } else {
+      // Aquí puedes hashear la contraseña antes de guardarla, por seguridad
+      // Ejemplo con hash (si tienes el paquete instalado):
+      // data.password = await Hash.make(data.password)
+    }
+
+    user.merge(data)
+    await user.save()
+
+    return response.ok(user)
   }
-
-  // Obtener solo los campos que quieres actualizar
-  const data = request.only(['nombre', 'apellido', 'telefono', 'correo', 'password'])
-
-  // Si password viene vacío o null, eliminarlo para no actualizarlo
-  if (!data.password) {
-    delete data.password
-  } else {
-    // Aquí puedes hashear la contraseña antes de guardarla, por seguridad
-    // Ejemplo con hash (si tienes el paquete instalado):
-    // data.password = await Hash.make(data.password)
-  }
-
-  user.merge(data)
-  await user.save()
-
-  return response.ok(user)
-}
 
   public async destroy({ params, response }: HttpContext) {
     const user = await Usuario.findOrFail(params.id)
@@ -54,5 +53,3 @@ export default class UsersController {
     return response.ok({ mensaje: 'Usuario eliminado correctamente' })
   }
 }
-
-
