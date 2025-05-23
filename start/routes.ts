@@ -10,7 +10,6 @@ import TicketsController from '#controllers/tickets_controller' // Ya la tienes 
 // AGREGAR ESTAS IMPORTACIONES PARA LOS NUEVOS CONTROLADORES DE LISTAS DE REFERENCIA (snake_case)
 import EstadosController from '#controllers/estados_ticketsController'
 import PrioridadesController from '#controllers/Prioridades_Controller'
-import ClientesController from '#controllers/Clientes_Controller'
 import CategoriasController from '#controllers/Categorias_Controller'
 import ServiciosController from '#controllers/Servicios_Controller '
 
@@ -49,7 +48,6 @@ router.group(() => {
   // AGREGAR ESTAS NUEVAS RUTAS PARA LAS LISTAS DE REFERENCIA DENTRO DEL GRUPO
   router.get('estados', [EstadosController, 'index'])
   router.get('prioridades', [PrioridadesController, 'index'])
-  router.get('clientes', [ClientesController, 'index'])
   router.get('categorias', [CategoriasController, 'index'])
   router.get('servicios', [ServiciosController, 'index'])
   // Para usuarios asignables, usamos el index de tu UsuariosController existente

@@ -2,7 +2,6 @@ import factory from '@adonisjs/lucid/factories'
 import { faker } from '@faker-js/faker'
 import { DateTime } from 'luxon'
 import Ticket from '#models/tickets'
-import Cliente from '#models/clientes'
 import Usuario from '#models/usuarios'
 import Categoria from '#models/categorias'
 import Servicio from '#models/servicios'
@@ -11,7 +10,6 @@ import Prioridad from '#models/prioridades'
 
 export const TicketFactory = factory
   .define(Ticket, async () => {
-    const cliente = await Cliente.query().select('id').orderByRaw('RAND()').firstOrFail()
     const usuario = await Usuario.query().select('id').orderByRaw('RAND()').firstOrFail()
     const categoria = await Categoria.query().select('id').orderByRaw('RAND()').firstOrFail()
     const servicio = await Servicio.query().select('id').orderByRaw('RAND()').firstOrFail()
@@ -23,7 +21,6 @@ export const TicketFactory = factory
       descripcion: faker.lorem.paragraph(),
       estadoId: estado.id,
       prioridadId: prioridad.id,
-      clienteId: cliente.id,
       usuarioAsignadoId: usuario.id,
       categoriaId: categoria.id,
       servicioId: servicio.id,

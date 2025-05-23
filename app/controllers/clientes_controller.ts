@@ -1,4 +1,4 @@
-import { HttpContext } from '@adonisjs/core/http'
+/*import { HttpContext } from '@adonisjs/core/http'
 import Cliente from '../models/clientes.js' // Ajusta la ruta
 
 export default class ClientesController {
@@ -6,4 +6,4 @@ export default class ClientesController {
     const clientes = await Cliente.all()
     return response.ok(clientes)
   }
-}
+}*/
