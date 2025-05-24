@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, manyToMany } from '@adonisjs/lucid/orm'
-import type { ManyToMany } from '@adonisjs/lucid/types/relations'
+import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
+import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Usuario from '../models/usuarios.js'
 import Empresa from '../models/empresas.js'
 
@@ -20,13 +20,13 @@ export default class UsuarioEmpresa extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  @manyToMany(() => Empresa, {
-    pivotTable: 'usuario_empresa',
+  @belongsTo(() => Empresa, {
+    foreignKey: 'empresa_id',
   })
-  declare empresa: ManyToMany<typeof Empresa>
+  declare empresa: BelongsTo<typeof Empresa>
 
-  @manyToMany(() => Usuario, {
-    pivotTable: 'usuario_empresa',
+  @belongsTo(() => Usuario, {
+    foreignKey: 'usuario_id',
   })
-  declare usuario: ManyToMany<typeof Usuario>
+  declare usuario: BelongsTo<typeof Usuario>
 }
