@@ -12,6 +12,7 @@ import EstadosController from '#controllers/estados_ticketsController'
 import PrioridadesController from '#controllers/Prioridades_Controller'
 import CategoriasController from '#controllers/Categorias_Controller'
 import ServiciosController from '#controllers/Servicios_Controller '
+import ProyectosController from '#controllers/proyectos_controller'
 
 // const usuariosController = new UsuariosController()
 
@@ -73,3 +74,13 @@ router
     router.delete('/:id', '#controllers/empresas_controller.destroy')
   })
   .prefix('/api/empresas')
+
+
+router
+  .group(() => {
+    router.get('/', '#controllers/proyectos_controller.index') // Obtener todos los proyectos
+    router.post('/', '#controllers/proyectos_controller.store') // Crear un nuevo proyecto
+    router.put('/:id', '#controllers/proyectos_controller.update') // Actualizar proyecto por ID
+    router.delete('/:id', '#controllers/proyectos_controller.destroy')
+  })
+  .prefix('/api/proyectos')

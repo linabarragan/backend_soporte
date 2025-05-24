@@ -5,9 +5,19 @@ export default class EmpresasController {
   // Obtener todas las empresas
   public async index({ response }: HttpContext) {
     try {
-      const empresas = await Empresa.all()
-      return response.ok(empresas)
+      const empresas = await Empresa.query().preload('proyectos')
+
+      const empresasConConteo = empresas.map((empresa) => {
+        const serialized = empresa.serialize()
+        return {
+          ...serialized,
+          proyectos: empresa.proyectos.length, // ← devuelve solo el número
+        }
+      })
+
+      return response.ok(empresasConConteo)
     } catch (error) {
+      console.error(error)
       return response.status(500).json({ mensaje: 'Error al obtener empresas' })
     }
   }
