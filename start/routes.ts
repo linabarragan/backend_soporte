@@ -54,6 +54,7 @@ router.group(() => {
   // Para usuarios asignables, usamos el index de tu UsuariosController existente
   router.get('usuarios_asignables', [UsuariosController, 'index'])
 })
+.prefix('/api') // <--- ¡CAMBIO CLAVE AQUÍ! Se añade el prefijo /api a este grupo
 // --- FIN DE TU CÓDIGO ORIGINAL ---
 
 router.get('/test-password', async () => {
