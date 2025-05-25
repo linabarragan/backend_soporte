@@ -9,6 +9,7 @@ export default class extends BaseSchema {
       table.string('nombre', 100).notNullable()
       table.string('nit', 50).notNullable().unique()
       table.string('correo', 150).notNullable()
+      table.string('telefono', 50).notNullable()
       table.timestamp('created_at')
       table.timestamp('updated_at')
     })

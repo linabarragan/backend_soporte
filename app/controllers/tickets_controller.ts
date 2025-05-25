@@ -15,7 +15,7 @@ export default class TicketsController {
    */
   async index({ response }: HttpContext) {
     const tickets = await Ticket.query()
-      .preload('cliente')
+     
       .preload('usuarioAsignado')
       .preload('categoria')
       .preload('servicio')
@@ -31,7 +31,7 @@ export default class TicketsController {
   async show({ params, response }: HttpContext) {
     const ticket = await Ticket.query()
       .where('id', params.id)
-      .preload('cliente')
+      
       .preload('usuarioAsignado')
       .preload('categoria')
       .preload('servicio')
@@ -52,7 +52,6 @@ export default class TicketsController {
     const descripcion = request.input('descripcion')
     const estado_id = request.input('estado_id')
     const prioridad_id = request.input('prioridad_id')
-    const cliente_id = request.input('cliente_id')
     const usuario_asignado_id = request.input('usuario_asignado_id')
     const categoria_id = request.input('categoria_id')
     const servicio_id = request.input('servicio_id')
@@ -74,14 +73,13 @@ export default class TicketsController {
       descripcion: descripcion,
       estadoId: estado_id,
       prioridadId: prioridad_id,
-      clienteId: cliente_id,
       usuarioAsignadoId: usuario_asignado_id,
       categoriaId: categoria_id,
       servicioId: servicio_id,
       fechaAsignacion: DateTime.now(),
     })
 
-    await ticket.load('cliente')
+    
     await ticket.load('usuarioAsignado')
     await ticket.load('categoria')
     await ticket.load('servicio')
@@ -122,7 +120,7 @@ export default class TicketsController {
     if (data.descripcion !== undefined) ticket.descripcion = data.descripcion
     if (data.estado_id !== undefined) ticket.estadoId = data.estado_id
     if (data.prioridad_id !== undefined) ticket.prioridadId = data.prioridad_id
-    if (data.cliente_id !== undefined) ticket.clienteId = data.cliente_id
+    
     if (data.usuario_asignado_id !== undefined) ticket.usuarioAsignadoId = data.usuario_asignado_id
     if (data.categoria_id !== undefined) ticket.categoriaId = data.categoria_id
     if (data.servicio_id !== undefined) ticket.servicioId = data.servicio_id
@@ -131,7 +129,7 @@ export default class TicketsController {
 
     await ticket.save()
 
-    await ticket.load('cliente')
+   
     await ticket.load('usuarioAsignado')
     await ticket.load('categoria')
     await ticket.load('servicio')
