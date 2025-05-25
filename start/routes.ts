@@ -12,7 +12,7 @@ import EstadosController from '#controllers/estados_ticketsController'
 import PrioridadesController from '#controllers/Prioridades_Controller'
 import CategoriasController from '#controllers/Categorias_Controller'
 import ServiciosController from '#controllers/Servicios_Controller '
-import ProyectosController from '#controllers/proyectos_controller'
+import auth from '@adonisjs/auth/services/main'
 
 // const usuariosController = new UsuariosController()
 
@@ -75,7 +75,6 @@ router
   })
   .prefix('/api/empresas')
 
-
 router
   .group(() => {
     router.get('/', '#controllers/proyectos_controller.index') // Obtener todos los proyectos
@@ -84,3 +83,12 @@ router
     router.delete('/:id', '#controllers/proyectos_controller.destroy')
   })
   .prefix('/api/proyectos')
+
+router
+  .group(() => {
+    router.get('/', '#controllers/roles_controller.index') // Obtener todos los proyectos
+    router.post('/', '#controllers/roles_controller.store') // Crear un nuevo proyecto
+    router.put('/:id', '#controllers/roles_controller.update') // Actualizar proyecto por ID
+    router.delete('/:id', '#controllers/roles_controller.destroy')
+  })
+  .prefix('/api/roles')
