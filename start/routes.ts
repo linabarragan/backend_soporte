@@ -92,3 +92,27 @@ router
     router.delete('/:id', '#controllers/roles_controller.destroy')
   })
   .prefix('/api/roles')
+
+router
+  .group(() => {
+    // Rutas para obtener datos de selección
+    router.get('/roles', '#controllers/role_module_permissions_controller.getRoles')
+    router.get('/items', '#controllers/role_module_permissions_controller.getItems')
+    router.get('/permissions', '#controllers/role_module_permissions_controller.getPermissions')
+
+    // Ruta para asignar/actualizar permisos
+    router.post(
+      '/assign-role-module-permissions',
+      '#controllers/role_module_permissions_controller.assign'
+    )
+
+    // Ruta para obtener todas las asignaciones
+    router.get('/assignments', '#controllers/role_module_permissions_controller.index')
+
+    // Ruta para eliminar todas las asignaciones para un rol y un ítem
+    router.delete(
+      '/assignments/:roleId/:itemId',
+      '#controllers/role_module_permissions_controller.destroyByRolItem'
+    )
+  })
+  .prefix('/api/role-module-permissions')
