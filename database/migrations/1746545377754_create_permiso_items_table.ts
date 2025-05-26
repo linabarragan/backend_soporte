@@ -5,7 +5,7 @@ export default class extends BaseSchema {
 
   async up() {
     this.schema.createTable(this.tableName, (table) => {
-      table.increments('id')
+      table.increments('id') // Clave primaria propia para esta tabla pivote (opcional, podrías usar una compuesta)
 
       table
         .integer('permiso_id')
@@ -20,10 +20,13 @@ export default class extends BaseSchema {
         .unsigned()
         .notNullable()
         .references('id')
-        .inTable('items')
+        .inTable('items') // Asumo que tu tabla se llama 'items' en plural
         .onDelete('CASCADE')
-      table.timestamp('created_at')
-      table.timestamp('updated_at')
+
+      table.unique(['permiso_id', 'item_id']) // Asegura que una combinación permiso-item sea única
+
+      table.timestamp('created_at', { useTz: true })
+      table.timestamp('updated_at', { useTz: true })
     })
   }
 

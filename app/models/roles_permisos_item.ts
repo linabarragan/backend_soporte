@@ -1,13 +1,18 @@
+// app/Models/roles_permisos_item.ts  <- ¡IMPORTANTE: Renombra tu archivo a esto!
+
 import { DateTime } from 'luxon'
 import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
-import Rol from './roles.js'
-import Permiso from './permisos.js'
-import Item from './items.js'
+
+import Rol from '#models/roles'
+import Permiso from '#models/permisos'
+import Item from '#models/items'
 
 export default class RolesPermisosItem extends BaseModel {
-  public static table = 'roles_permisos_item'
+  public static table = 'rol_permiso_items'
 
+  // CLAVE PRIMARIA SIMPLE (ID autoincrementable):
+  // Es más flexible y compatible con itemId nullable.
   @column({ isPrimary: true })
   declare id: number
 
@@ -15,10 +20,10 @@ export default class RolesPermisosItem extends BaseModel {
   declare rolId: number
 
   @column()
-  declare permisosId: number
+  declare permisoId: number
 
-  @column()
-  declare itemId: number
+  @column({ serializeAs: null }) // Permite que itemId sea nulo
+  declare itemId: number | null
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -26,18 +31,22 @@ export default class RolesPermisosItem extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
+  // RELACIONES:
   @belongsTo(() => Rol, {
     foreignKey: 'rolId',
+    localKey: 'id',
   })
   declare rol: BelongsTo<typeof Rol>
 
   @belongsTo(() => Permiso, {
-    foreignKey: 'permisosId',
+    foreignKey: 'permisoId',
+    localKey: 'id',
   })
   declare permiso: BelongsTo<typeof Permiso>
 
   @belongsTo(() => Item, {
     foreignKey: 'itemId',
+    localKey: 'id',
   })
   declare item: BelongsTo<typeof Item>
 }

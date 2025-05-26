@@ -6,9 +6,11 @@ export default class extends BaseSchema {
   async up() {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
-      table.string('nombre', 100).notNullable().unique()
-      table.timestamp('created_at')
-      table.timestamp('updated_at')
+      table.string('nombre', 100).notNullable().unique() // Nombre del permiso (ej. 'ver', 'crear')
+      table.string('descripcion').nullable() // Opcional: una descripción del permiso
+
+      table.timestamp('created_at', { useTz: true })
+      table.timestamp('updated_at', { useTz: true })
     })
   }
 
