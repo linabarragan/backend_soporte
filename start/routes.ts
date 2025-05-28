@@ -13,6 +13,10 @@ import PrioridadesController from '#controllers/Prioridades_Controller'
 import CategoriasController from '#controllers/Categorias_Controller'
 import ServiciosController from '#controllers/Servicios_Controller '
 import auth from '@adonisjs/auth/services/main'
+import RolePermissionItemController from '#controllers/roles_permisos_items_controller'
+import RoleController from '#controllers/role_controller'
+import ItemController from '#controllers/item_controller'
+import PermisoController from '#controllers/permiso_controller'
 
 // const usuariosController = new UsuariosController()
 
@@ -84,35 +88,14 @@ router
   })
   .prefix('/api/proyectos')
 
-router
-  .group(() => {
-    router.get('/', '#controllers/roles_controller.index') // Obtener todos los proyectos
-    router.post('/', '#controllers/roles_controller.store') // Crear un nuevo proyecto
-    router.put('/:id', '#controllers/roles_controller.update') // Actualizar proyecto por ID
-    router.delete('/:id', '#controllers/roles_controller.destroy')
-  })
-  .prefix('/api/roles')
+router.get('/asignaciones', [RolePermissionItemController, 'index'])
+router.post('/asignaciones', [RolePermissionItemController, 'store'])
+router.put('/asignaciones/actualizar-por-rol-item', [
+  RolePermissionItemController,
+  'updateByRolItem',
+])
+router.delete('/asignaciones/:id', [RolePermissionItemController, 'destroy'])
 
-router
-  .group(() => {
-    // Rutas para obtener datos de selección
-    router.get('/roles', '#controllers/role_module_permissions_controller.getRoles')
-    router.get('/items', '#controllers/role_module_permissions_controller.getItems')
-    router.get('/permissions', '#controllers/role_module_permissions_controller.getPermissions')
-
-    // Ruta para asignar/actualizar permisos
-    router.post(
-      '/assign-role-module-permissions',
-      '#controllers/role_module_permissions_controller.assign'
-    )
-
-    // Ruta para obtener todas las asignaciones
-    router.get('/assignments', '#controllers/role_module_permissions_controller.index')
-
-    // Ruta para eliminar todas las asignaciones para un rol y un ítem
-    router.delete(
-      '/assignments/:roleId/:itemId',
-      '#controllers/role_module_permissions_controller.destroyByRolItem'
-    )
-  })
-  .prefix('/api/role-module-permissions')
+router.get('/roles', [RoleController, 'index'])
+router.get('/items', [ItemController, 'index'])
+router.get('/permisos', [PermisoController, 'index'])

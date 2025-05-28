@@ -6,7 +6,7 @@ import Permiso from './permisos.js'
 import Item from './items.js'
 
 export default class RolesPermisosItem extends BaseModel {
-  public static table = 'roles_permisos_item'
+  public static table = 'rol_permiso_items'
 
   @column({ isPrimary: true })
   declare id: number
@@ -15,7 +15,7 @@ export default class RolesPermisosItem extends BaseModel {
   declare rolId: number
 
   @column()
-  declare permisosId: number
+  declare permisoId: number
 
   @column()
   declare itemId: number
@@ -32,7 +32,7 @@ export default class RolesPermisosItem extends BaseModel {
   declare rol: BelongsTo<typeof Rol>
 
   @belongsTo(() => Permiso, {
-    foreignKey: 'permisosId',
+    foreignKey: 'permisoId',
   })
   declare permiso: BelongsTo<typeof Permiso>
 
