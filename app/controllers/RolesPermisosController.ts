@@ -1,122 +1,82 @@
 // app/Controllers/RolesPermisosController.ts
 
 import type { HttpContext } from '@adonisjs/core/http'
-import Rol from '#models/roles' // Asegúrate de que la ruta sea correcta, ej. '#models/rol' o '#models/Role'
-import Permiso from '#models/permisos' // Asegúrate de que la ruta sea correcta
-import Item from '#models/items' // Asegúrate de que la ruta sea correcta
-// CAMBIO AQUI: Importa el modelo con su nombre de clase real
-import RolesPermisosItem from '#models/roles_permisos_item' // Importa tu modelo pivot (asegúrate de que el archivo se llame roles_permisos_item.ts)
-
+import Rol from '#models/roles'
+import Permiso from '#models/permisos'
+import Item from '#models/items'
+import RolPermisoItem from '#models/roles_permisos_item'
 
 export default class RolesPermisosController {
-  /**
-   * Obtener todos los roles.
-   * GET /api/permisos-gestion/roles
-   */
+  // --- Métodos de obtención de datos (Leer / Read) ---
+
   async getRoles({ response }: HttpContext) {
     try {
       const roles = await Rol.all()
       return response.ok(roles)
     } catch (error) {
       console.error('Error al obtener roles:', error)
-      return response.internalServerError({ message: 'Error al obtener roles', error: error.message })
+      return response.internalServerError({ message: 'Error al obtener roles', error: (error as any).message })
     }
   }
 
-  /**
-   * Obtener todos los permisos.
-   * GET /api/permisos-gestion/permisos
-   */
   async getPermisos({ response }: HttpContext) {
     try {
       const permisos = await Permiso.all()
       return response.ok(permisos)
     } catch (error) {
       console.error('Error al obtener permisos:', error)
-      return response.internalServerError({ message: 'Error al obtener permisos', error: error.message })
+      return response.internalServerError({ message: 'Error al obtener permisos', error: (error as any).message })
     }
   }
 
-  /**
-   * Obtener todos los ítems (vistas/módulos).
-   * GET /api/permisos-gestion/items
-   */
   async getItems({ response }: HttpContext) {
     try {
       const items = await Item.all()
       return response.ok(items)
     } catch (error) {
       console.error('Error al obtener ítems:', error)
-      return response.internalServerError({ message: 'Error al obtener ítems', error: error.message })
+      return response.internalServerError({ message: 'Error al obtener ítems', error: (error as any).message })
     }
   }
 
-  /**
-   * Obtener usuarios (opcional, si los necesitas en esta sección).
-   * GET /api/permisos-gestion/usuarios
-   */
-  async getUsuarios({ response }: HttpContext) {
-    try {
-      // Si tienes un modelo de Usuario, úsalo aquí.
-      // import Usuario from '#models/usuario'
-      // const usuarios = await Usuario.all()
-      // return response.ok(usuarios)
-      return response.ok([]) // Retorna un array vacío si no lo usas o no tienes modelo de Usuario aquí
-    } catch (error) {
-      console.error('Error al obtener usuarios:', error)
-      return response.internalServerError({ message: 'Error al obtener usuarios', error: error.message })
-    }
-  }
-
-  /**
-   * Obtener todas las asignaciones de permisos.
-   * GET /api/permisos-gestion/asignaciones
-   */
   async getAsignaciones({ response }: HttpContext) {
     try {
-      const asignaciones = await RolesPermisosItem.query()
+      const asignaciones = await RolPermisoItem.query()
         .preload('rol')
         .preload('permiso')
         .preload('item')
-        .orderBy('created_at', 'desc') // O el campo que prefieras para ordenar
+        .orderBy('created_at', 'desc')
 
       return response.ok(asignaciones)
     } catch (error) {
       console.error('Error al obtener todas las asignaciones:', error)
-      return response.internalServerError({ message: 'Error al obtener todas las asignaciones', error: error.message })
+      return response.internalServerError({ message: 'Error al obtener todas las asignaciones', error: (error as any).message })
     }
   }
 
-  /**
-   * Obtener asignaciones para un rol específico.
-   * GET /api/permisos-gestion/roles/:rolId/asignaciones
-   * Incluye las relaciones para mostrar nombres en el frontend.
-   */
   async getAsignacionesPorRol({ params, response }: HttpContext) {
     try {
       const rolId = params.rolId
-      const asignaciones = await RolesPermisosItem.query()
+
+      if (!rolId || isNaN(Number(rolId))) {
+        return response.badRequest({ message: 'ID de rol inválido.' });
+      }
+
+      const asignaciones = await RolPermisoItem.query()
         .where('rol_id', rolId)
-        .preload('rol') // Carga el objeto Rol relacionado
-        .preload('permiso') // Carga el objeto Permiso relacionado
-        .preload('item') // Carga el objeto Item relacionado
-        .orderBy('created_at', 'desc') // O el campo que prefieras para ordenar
+        .preload('rol')
+        .preload('permiso')
+        .preload('item')
+        .orderBy('created_at', 'desc')
 
       return response.ok(asignaciones)
     } catch (error) {
       console.error(`Error al obtener asignaciones para el rol ${params.rolId}:`, error)
-      return response.internalServerError({ message: 'Error al obtener asignaciones', error: error.message })
+      return response.internalServerError({ message: 'Error al obtener asignaciones', error: (error as any).message })
     }
   }
 
-  /**
-   * Crear nuevas asignaciones de permisos.
-   * POST /api/permisos-gestion/asignaciones
-   * { rolId, itemId, selectedPermisos, selectedVistas }
-   *
-   * selectedPermisos: IDs de permisos seleccionados para el rol general o para el item específico.
-   * selectedVistas: IDs de items a los que se les asigna el permiso 'Ver' (o similar).
-   */
+  // --- Método para crear asignaciones (Crear / Create) ---
   async createAsignacion({ request, response }: HttpContext) {
     const { rolId, itemId, selectedPermisos, selectedVistas } = request.only([
       'rolId',
@@ -125,116 +85,203 @@ export default class RolesPermisosController {
       'selectedVistas',
     ])
 
-    if (!rolId) {
-      return response.badRequest({ message: 'El rol es requerido para la asignación.' })
+    const cleanRolId = Number(rolId);
+    const cleanItemId = itemId === undefined || itemId === '' ? null : Number(itemId);
+
+    if (isNaN(cleanRolId)) {
+      return response.badRequest({ message: 'El ID de rol es inválido.' });
+    }
+    if (itemId !== undefined && itemId !== '' && isNaN(cleanItemId as number)) {
+      return response.badRequest({ message: 'El ID del ítem debe ser un número válido o nulo.' });
     }
 
     if (!selectedPermisos && !selectedVistas) {
-      return response.badRequest({ message: 'Debe seleccionar al menos un permiso o una vista para asignar.' })
+      return response.badRequest({ message: 'Debe seleccionar al menos un permiso o una vista para asignar.' });
     }
 
-    const assignmentsToCreate: Array<{ rolId: number; permisoId: number; itemId: number | null }> = []
+    const permisoLeer = await Permiso.findBy('nombre', 'leer');
+    if (!permisoLeer) {
+      return response.internalServerError({ message: "El permiso 'leer' (para vistas) no fue encontrado. Asegúrate de crearlo." });
+    }
+    const leerPermisoId = permisoLeer.id;
 
-    // 1. Asignar permisos generales o a un ítem específico
+    const assignmentsToCreate: Array<{ rolId: number; permisoId: number; itemId: number | null }> = [];
+
     if (selectedPermisos && selectedPermisos.length > 0) {
       for (const permisoId of selectedPermisos) {
+        if (permisoId === leerPermisoId) {
+            continue;
+        }
         assignmentsToCreate.push({
-          rolId: rolId,
+          rolId: cleanRolId,
           permisoId: permisoId,
-          itemId: itemId, // Si itemId es null, se guarda como asignación general para el rol
-        })
+          itemId: cleanItemId,
+        });
       }
     }
 
-    // 2. Asignar el permiso "Ver" (u otro específico) a las vistas seleccionadas
     if (selectedVistas && selectedVistas.length > 0) {
-      const permisoVer = await Permiso.findBy('nombre', 'Ver');
-      if (!permisoVer) {
-        return response.internalServerError({ message: "El permiso 'Ver' no fue encontrado. Asegúrate de crearlo." });
-      }
-
       for (const vistaId of selectedVistas) {
+        const numericVistaId = Number(vistaId);
+        if (isNaN(numericVistaId)) {
+          return response.badRequest({ message: `El ID de la vista '${vistaId}' no es un número válido.` });
+        }
         assignmentsToCreate.push({
-          rolId: rolId,
-          permisoId: permisoVer.id,
-          itemId: vistaId,
-        })
+          rolId: cleanRolId,
+          permisoId: leerPermisoId,
+          itemId: numericVistaId,
+        });
       }
+    }
+
+    if (assignmentsToCreate.length === 0) {
+        return response.badRequest({ message: 'No se generaron asignaciones válidas para crear.' });
     }
 
     try {
       let createdCount = 0
       for (const assign of assignmentsToCreate) {
-        // Usar findOrCreate para evitar duplicados.
-        // La restricción UNIQUE en la DB en ['rol_id', 'permiso_id', 'item_id'] es crucial aquí.
-        const [_assignment, isNew] = await RolesPermisosItem.findOrCreate( // Usando el nombre de la clase importada
-          {
+        const exists = await RolPermisoItem.query()
+          .where('rol_id', assign.rolId)
+          .where('permiso_id', assign.permisoId)
+          .if(assign.itemId !== null, (query) => {
+            query.where('item_id', assign.itemId!)
+          })
+          .if(assign.itemId === null, (query) => {
+            query.whereNull('item_id')
+          })
+          .first()
+
+        if (!exists) {
+          await RolPermisoItem.create({
             rolId: assign.rolId,
             permisoId: assign.permisoId,
             itemId: assign.itemId,
-          },
-          assign
-        )
-        if (isNew) {
+          })
           createdCount++
         }
       }
 
-      return response.created({ message: `Asignaciones procesadas. ${createdCount} nuevas asignaciones creadas.` })
+      return response.created({ message: `Asignaciones procesadas. ${createdCount} nuevas asignaciones creadas.`, createdRecords: assignmentsToCreate })
     } catch (error) {
       console.error('Error al crear asignaciones:', error)
-      if (error.code === '23505' || error.code === 'ER_DUP_ENTRY') { // PostgreSQL: '23505', MySQL: 'ER_DUP_ENTRY'
+      if ((error as any).code === '23505' || (error as any).code === 'ER_DUP_ENTRY') {
         return response.conflict({ message: 'Algunas asignaciones ya existen.' })
       }
-      return response.internalServerError({ message: 'Error al crear asignaciones', error: error.message })
+      return response.internalServerError({ message: 'Error al crear asignaciones', error: (error as any).message })
     }
   }
 
-  /**
-   * Eliminar una asignación específica.
-   * DELETE /api/permisos-gestion/asignaciones/:rolId/:permisoId/:itemId
-   */
+  // --- Método para eliminar asignación (Eliminar / Delete) - CORREGIDO Y COMPLETO ---
   async deleteAsignacion({ params, response }: HttpContext) {
-    const { rolId, permisoId, itemId } = params
+    const { rolId, permisoId, itemId } = params;
+
+    console.log('Backend DELETE: Recibiendo params del URL:', { rolId, permisoId, itemId });
+
+    const numericRolId = Number(rolId);
+    const numericPermisoId = Number(permisoId);
+
+    if (isNaN(numericRolId) || isNaN(numericPermisoId)) {
+      console.error('Backend DELETE: rolId o permisoId son inválidos o "undefined"');
+      return response.badRequest({ message: 'Los IDs de rol o permiso no son válidos.' });
+    }
+
+    let actualItemId: number | null = null;
+    if (itemId === 'null') { // Si el string es 'null', convertir a null
+      actualItemId = null;
+    } else if (itemId !== undefined && itemId !== null && itemId !== '') { // Si tiene valor, intentar convertir a número
+      actualItemId = Number(itemId);
+      if (isNaN(actualItemId)) {
+        console.error('Backend DELETE: ID del ítem no válido (NaN después de conversión):', itemId);
+        return response.badRequest({ message: 'El ID del ítem no es válido.' });
+      }
+    }
+    // Si itemId es undefined, null, o '', actualItemId ya es null.
+
+    console.log('Backend DELETE: Valores procesados para la consulta:', {
+      numericRolId,
+      numericPermisoId,
+      actualItemId
+    });
 
     try {
-      let query = RolesPermisosItem.query() // Usando el nombre de la clase importada
-        .where('rol_id', rolId)
-        .where('permiso_id', permisoId)
+      const query = RolPermisoItem.query()
+        .where('rol_id', numericRolId)
+        .where('permiso_id', numericPermisoId)
 
-      // Si itemId es 'null' (cadena), significa que es una asignación general.
-      // Si es un número, es una asignación a un ítem específico.
-      if (itemId === 'null') {
-        query = query.whereNull('item_id')
+      if (actualItemId === null) {
+        query.whereNull('item_id');
       } else {
-        query = query.where('item_id', itemId)
+        query.where('item_id', actualItemId);
       }
 
-      const asignacion = await query.first()
+      const deletedRows = await query.delete();
 
-      if (!asignacion) {
-        return response.notFound({ message: 'Asignación no encontrada.' })
+      console.log('Backend DELETE: Filas eliminadas:', deletedRows);
+
+      if (deletedRows === 0) {
+        return response.notFound({ message: 'Asignación no encontrada o ya eliminada.' })
       }
 
-      await asignacion.delete()
       return response.noContent() // 204 No Content
     } catch (error) {
       console.error(`Error al eliminar asignación para Rol:${rolId}, Permiso:${permisoId}, Item:${itemId}:`, error)
-      return response.internalServerError({ message: 'Error al eliminar asignación', error: error.message })
+      return response.internalServerError({ message: 'Error al eliminar asignación', error: (error as any).message })
     }
   }
 
-  /**
-   * Actualizar una asignación específica.
-   * PUT /api/permisos-gestion/asignaciones/:rolId/:permisoId/:itemId
-   * NOTA: La actualización de asignaciones es compleja.
-   * Normalmente es más fácil eliminar la antigua y crear una nueva si cambian los IDs.
-   * Si solo cambian otros atributos en la tabla pivot, se puede usar.
-   * Por ahora, solo se devuelve un error informativo.
-   */
-  async updateAsignacion({ response }: HttpContext) {
-    return response.badRequest({ message: 'La actualización directa de asignaciones no está soportada de esta manera. Por favor, elimina la asignación existente y crea una nueva si necesitas cambiar los elementos relacionados (rol, permiso, item).' });
-    // Si realmente necesitas actualizar algo DENTRO de la asignación (ej. un campo 'activo'),
-    // la lógica sería similar a deleteAsignacion para encontrarla y luego usar .merge().save()
+  // El método updateAsignacion se mantiene comentado si no se usa.
+  /*
+  async updateAsignacion({ params, request, response }: HttpContext) {
+    const { rolId, permisoId, itemId } = params;
+
+    const numericRolId = Number(rolId);
+    const numericPermisoId = Number(permisoId);
+
+    if (isNaN(numericRolId) || isNaN(numericPermisoId)) {
+        return response.badRequest({ message: 'Los IDs de rol o permiso no son válidos para actualizar.' });
+    }
+
+    let actualItemId: number | null = null;
+    if (itemId === 'null') {
+      actualItemId = null;
+    } else if (itemId !== undefined && itemId !== null && itemId !== '') {
+      actualItemId = Number(itemId);
+      if (isNaN(actualItemId)) {
+        return response.badRequest({ message: 'El ID del ítem no es válido para actualizar.' });
+      }
+    }
+
+    const { is_active } = request.only(['is_active']);
+
+    try {
+      const assignment = await RolPermisoItem.query()
+        .where('rol_id', numericRolId)
+        .where('permiso_id', numericPermisoId)
+        .if(actualItemId === null, (query) => {
+          query.whereNull('item_id');
+        })
+        .if(actualItemId !== null, (query) => {
+          query.where('item_id', actualItemId);
+        })
+        .first();
+
+      if (!assignment) {
+        return response.notFound({ message: 'Asignación no encontrada para actualizar.' });
+      }
+
+      if (typeof is_active === 'boolean') {
+        assignment.is_active = is_active;
+        await assignment.save();
+        return response.ok({ message: 'Asignación actualizada exitosamente.', assignment });
+      } else {
+        return response.ok({ message: 'Asignación encontrada, pero no se proporcionaron campos actualizables válidos.', assignment });
+      }
+
+    } catch (error) {
+      console.error(`Error al actualizar asignación para Rol:${rolId}, Permiso:${permisoId}, Item:${itemId}:`, error);
+      return response.internalServerError({ message: 'Error al actualizar asignación', error: (error as any).message });
+    }
   }
-}
+  */
+} // <--- ¡Asegúrate de que esta llave de cierre de la clase exista al final del archivo!

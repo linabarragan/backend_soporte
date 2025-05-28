@@ -1,55 +1,122 @@
+// app/Controllers/Http/UsersController.ts
 import type { HttpContext } from '@adonisjs/core/http'
-import Usuario from '../models/usuarios.js'
-// import hash from '@adonisjs/core/services/hash'
-// import { inject } from '@adonisjs/core'
+import Usuario from '#models/usuarios' // Asegúrate de que el nombre del archivo del modelo sea correcto (Usuario.js o usuarios.js)
+import hash from '@adonisjs/core/services/hash' // Importa el servicio de hash si lo usas
 
 export default class UsersController {
-  async index() {
-    return await Usuario.all()
+  /**
+   * Muestra una lista de todos los usuarios con sus roles asociados.
+   */
+  async index({ response }: HttpContext) {
+    try {
+      // Carga eager (preload) la relación 'role'.
+      // Asegúrate de que 'role' sea el nombre de la relación definida en tu modelo Usuario.
+      const users = await Usuario.query().preload('role')
+      return response.ok(users)
+    } catch (error) {
+      console.error('Error al obtener usuarios:', error)
+      return response.internalServerError({ message: 'Error al obtener usuarios', error: error.message })
+    }
   }
 
+  /**
+   * Crea un nuevo usuario.
+   */
   async store({ request, response }: HttpContext) {
-    const data = request.only(['nombre', 'apellido', 'telefono', 'correo', 'password'])
+    // === CAMBIO CLAVE AQUÍ: 'rolId' en lugar de 'roleId' ===
+    const { nombre, apellido, telefono, correo, password, rolId } = request.only([
+      'nombre',
+      'apellido',
+      'telefono',
+      'correo',
+      'password',
+      'rolId', // ¡CAMBIADO A 'rolId'!
+    ])
 
-    console.log('Contraseña antes de guardar:', data.password)
-    const user = await Usuario.create({
-      ...data,
-    })
-    console.log('Contraseña guardada en la BD:', user.password)
-    return response.created(user)
+    if (!password) {
+      return response.badRequest({ message: 'La contraseña es requerida.' })
+    }
+
+    try {
+      const hashedPassword = await hash.make(password) // Hashear la contraseña
+
+      const user = await Usuario.create({
+        nombre,
+        apellido,
+        telefono,
+        correo,
+        password: hashedPassword, // Guarda la contraseña hasheada
+        rolId, // ¡CAMBIADO A 'rolId'! Asigna el ID del rol
+      })
+
+      // Opcional: precargar el rol para la respuesta de creación
+      await user.load('role')
+
+      return response.created(user)
+    } catch (error) {
+      console.error('Error al crear usuario:', error)
+      return response.internalServerError({ message: 'Error al crear usuario', error: error.message })
+    }
   }
 
+  /**
+   * Actualiza un usuario existente por ID.
+   */
   async update({ params, request, response }: HttpContext) {
     const user = await Usuario.find(params.id)
     if (!user) {
       return response.notFound({ message: 'Usuario no encontrado' })
     }
 
-    // Obtener solo los campos que quieres actualizar
-    const data = request.only(['nombre', 'apellido', 'telefono', 'correo', 'password'])
+    // === CAMBIO CLAVE AQUÍ: 'rolId' en lugar de 'roleId' ===
+    const { nombre, apellido, telefono, correo, password, rolId } = request.only([
+      'nombre',
+      'apellido',
+      'telefono',
+      'correo',
+      'password',
+      'rolId', // ¡CAMBIADO A 'rolId'!
+    ])
 
-    // Si password viene vacío o null, eliminarlo para no actualizarlo
-    if (!data.password) {
-      delete data.password
-    } else {
-      // Aquí puedes hashear la contraseña antes de guardarla, por seguridad
-      // Ejemplo con hash (si tienes el paquete instalado):
-      // data.password = await Hash.make(data.password)
+    try {
+      user.nombre = nombre || user.nombre
+      user.apellido = apellido || user.apellido
+      user.telefono = telefono || user.telefono
+      user.correo = correo || user.correo
+      user.rolId = rolId || user.rolId // ¡CAMBIADO A 'rolId'! Actualiza el ID del rol
+
+      // Solo actualiza la contraseña si se proporciona una nueva
+      if (password) {
+        user.password = await hash.make(password)
+      }
+
+      await user.save()
+
+      // Opcional: precargar el rol para la respuesta de actualización
+      await user.load('role')
+
+      return response.ok(user)
+    } catch (error) {
+      console.error('Error al actualizar usuario:', error)
+      return response.internalServerError({ message: 'Error al actualizar usuario', error: error.message })
     }
-
-    user.merge(data)
-    await user.save()
-
-    return response.ok(user)
   }
 
+  /**
+   * Elimina un usuario por ID.
+   */
   public async destroy({ params, response }: HttpContext) {
-    const user = await Usuario.findOrFail(params.id)
-    if (!user) {
-      return response.notFound({ message: 'Usuario no encontrado' })
-    }
+    try {
+      const user = await Usuario.findOrFail(params.id) // findOrFail arrojará un error si no lo encuentra
 
-    await user.delete()
-    return response.ok({ mensaje: 'Usuario eliminado correctamente' })
+      await user.delete()
+      return response.ok({ message: 'Usuario eliminado correctamente' })
+    } catch (error) {
+      if (error.code === 'E_ROW_NOT_FOUND') {
+        return response.notFound({ message: 'Usuario no encontrado' })
+      }
+      console.error('Error al eliminar usuario:', error)
+      return response.internalServerError({ message: 'Error al eliminar usuario', error: error.message })
+    }
   }
 }

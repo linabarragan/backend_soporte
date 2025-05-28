@@ -7,7 +7,7 @@ import Permiso from './permisos.js' // O la ruta correcta si usas alias (#models
 export default class Rol extends BaseModel {
   // ******************************************************
   // ¡CAMBIO CLAVE AQUÍ! Define el nombre real de la tabla en la DB
-  public static table = 'rols' // <--- ¡AÑADIDO Y CORREGIDO A 'rols' (singular)!
+  public static table = 'roles' // <--- ¡AÑADIDO Y CORREGIDO A 'rols' (singular)!
   // ******************************************************
 
   @column({ isPrimary: true })
@@ -20,7 +20,7 @@ export default class Rol extends BaseModel {
   declare descripcion: string
 
   @column()
-  declare estado: string
+  declare estado: boolean
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
