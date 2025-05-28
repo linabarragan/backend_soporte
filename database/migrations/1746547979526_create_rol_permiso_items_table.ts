@@ -7,24 +7,9 @@ export default class extends BaseSchema {
 
   async up() {
     this.schema.createTable(this.tableName, (table) => {
-      // 1. Añadimos un ID auto-incremental como clave primaria
-      table.increments('id').primary() // <-- Nuevo ID primario de la tabla
-
-      table
-        .integer('rol_id')
-        .unsigned()
-        .references('id')
-        .inTable('roles') // Asegúrate que 'roles' sea el nombre correcto de tu tabla de roles
-        .onDelete('CASCADE')
-        .nullable() // Si rol_id puede ser nulo, déjalo así. Si no, cámbialo a .notNullable()
-
-      table
-        .integer('item_id')
-        .unsigned()
-        .references('id')
-        .inTable('items') // Asegúrate que 'items' sea el nombre correcto de tu tabla de ítems
-        .onDelete('CASCADE')
-        .nullable() // <-- Ya lo tenías así, y es correcto si puede ser nulo
+      table.increments('id').primary()
+      table.integer('rol_id').unsigned().references('id').inTable('rols').onDelete('CASCADE')
+      table.integer('item_id').unsigned().references('id').inTable('items').onDelete('CASCADE')
 
       table
         .integer('permiso_id')

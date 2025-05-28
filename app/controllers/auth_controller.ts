@@ -19,7 +19,7 @@ export default class AuthController {
       const token = await Usuario.accessTokens.create(user)
       return {
         type: 'bearer',
-        token: token.value,
+        token: token,
         user: {
           id: user.id,
           correo: user.correo,

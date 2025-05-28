@@ -12,9 +12,12 @@ import TicketsController from '#controllers/tickets_controller'
 import EstadosController from '#controllers/estados_ticketsController'
 import PrioridadesController from '#controllers/Prioridades_Controller'
 import CategoriasController from '#controllers/Categorias_Controller'
-import ServiciosController from '#controllers/Servicios_Controller ' // Eliminado el espacio extra y cambiado a snake_case
-import ProyectosController from '#controllers/proyectos_controller'
-import RolesPermisosController from '#controllers/RolesPermisosController' 
+import ServiciosController from '#controllers/Servicios_Controller '
+import auth from '@adonisjs/auth/services/main'
+import RolePermissionItemController from '#controllers/roles_permisos_items_controller'
+import RoleController from '#controllers/role_controller'
+import ItemController from '#controllers/item_controller'
+import PermisoController from '#controllers/permiso_controller'
 
 // --- NUEVAS IMPORTACIONES PARA LOS CONTROLADORES CRUD DE MAESTROS ---
 // CORRECCIÓN: Cambiado a snake_case para las importaciones de controladores
@@ -27,7 +30,6 @@ router.get('/', async () => {
     hello: 'world',
   }
 })
-
 // Rutas de autenticación
 router.post('/login', [AuthController, 'login'])
 router.post('/user', '#controllers/login_controller.createUser') // Asumiendo que es para registro de usuarios
@@ -61,24 +63,17 @@ router.group(() => {
   router.get('servicios', [ServiciosController, 'index'])
 
   // Grupo de rutas para empresas (CRUD)
-  router
-    .group(() => {
-      router.get('/', '#controllers/empresas_controller.index')
-      router.post('/', '#controllers/empresas_controller.store')
-      router.put('/:id', '#controllers/empresas_controller.update')
-      router.delete('/:id', '#controllers/empresas_controller.destroy')
-    })
-    .prefix('/empresas') // -> /api/empresas
+  // router
+  //   .group(() => {
+  //     router.get('/', '#controllers/empresas_controller.index')
+  //     router.post('/', '#controllers/empresas_controller.store')
+  //     router.put('/:id', '#controllers/empresas_controller.update')
+  //     router.delete('/:id', '#controllers/empresas_controller.destroy')
+  //   })
+  //   .prefix('/empresas') // -> /api/empresas
 
   // Grupo de rutas para proyectos (CRUD)
-  router
-    .group(() => {
-      router.get('/', [ProyectosController, 'index'])
-      router.post('/', [ProyectosController, 'store'])
-      router.put('/:id', [ProyectosController, 'update'])
-      router.delete('/:id', [ProyectosController, 'destroy'])
-    })
-    .prefix('/proyectos') // -> /api/proyectos
+  
 
   // --- CRUD COMPLETO PARA ROLES ---
   router
@@ -113,28 +108,7 @@ router.group(() => {
     })
     .prefix('/items') // -> /api/items
 
-  // --- RUTAS PARA GESTIÓN DE ASIGNACIONES (RolesPermisosController) ---
-  router.group(() => {
-    // Rutas de lectura de asignaciones
-    router.get('asignaciones', [RolesPermisosController, 'getAsignaciones'])
-    router.get('roles/:rolId/asignaciones', [RolesPermisosController, 'getAsignacionesPorRol'])
-
-    // Ruta de creación de asignaciones
-    router.post('asignaciones', [RolesPermisosController, 'createAsignacion'])
-
-    // Rutas de eliminación de asignaciones (dos rutas para manejar itemId numérico y 'null')
-    // 1. Para itemId que es un número (regex [0-9]+)
-    router.delete('asignaciones/:rolId/:permisoId/:itemId([0-9]+)', [RolesPermisosController, 'deleteAsignacion'])
-    // 2. Para itemId que es la cadena literal 'null'
-    router.delete('asignaciones/:rolId/:permisoId/null', [RolesPermisosController, 'deleteAsignacion'])
-
-    // Rutas de actualización de asignaciones (dos rutas para manejar itemId numérico y 'null')
-    // 1. Para itemId que es un número (regex [0-9]+)
-    router.put('asignaciones/:rolId/:permisoId/:itemId([0-9]+)', [RolesPermisosController, 'updateAsignacion'])
-    // 2. Para itemId que es la cadena literal 'null'
-    router.put('asignaciones/:rolId/:permisoId/null', [RolesPermisosController, 'updateAsignacion'])
-
-  }).prefix('/permisos-gestion') // -> /api/permisos-gestion
+ 
 
   // --- RUTAS PARA CREAR ROLES, PERMISOS, ÍTEMS DESDE LA MISMA VISTA DE ASIGNACIÓN ---
   // Si ya tienes las rutas POST en /api/roles, /api/permisos, /api/items,
@@ -160,4 +134,32 @@ router.get('/test-password', async () => {
   return { result }
 })
 
-export default router
+router
+  .group(() => {
+    router.get('/', '#controllers/empresas_controller.index') // Obtener todas las empresas
+    router.post('/', '#controllers/empresas_controller.store') // Crear una nueva empresa
+    router.put('/:id', '#controllers/empresas_controller.update') // Actualizar empresa por ID
+    router.delete('/:id', '#controllers/empresas_controller.destroy')
+  })
+  .prefix('/api/empresas')
+
+router
+  .group(() => {
+    router.get('/', '#controllers/proyectos_controller.index') // Obtener todos los proyectos
+    router.post('/', '#controllers/proyectos_controller.store') // Crear un nuevo proyecto
+    router.put('/:id', '#controllers/proyectos_controller.update') // Actualizar proyecto por ID
+    router.delete('/:id', '#controllers/proyectos_controller.destroy')
+  })
+  .prefix('/api/proyectos')
+
+router.get('/asignaciones', [RolePermissionItemController, 'index'])
+router.post('/asignaciones', [RolePermissionItemController, 'store'])
+router.put('/asignaciones/actualizar-por-rol-item', [
+  RolePermissionItemController,
+  'updateByRolItem',
+])
+router.delete('/asignaciones/:id', [RolePermissionItemController, 'destroy'])
+
+router.get('/roles', [RoleController, 'index'])
+router.get('/items', [ItemController, 'index'])
+router.get('/permisos', [PermisoController, 'index'])

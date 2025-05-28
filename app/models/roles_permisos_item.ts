@@ -40,7 +40,6 @@ export default class RolesPermisosItem extends BaseModel {
 
   @belongsTo(() => Permiso, {
     foreignKey: 'permisoId',
-    localKey: 'id',
   })
   declare permiso: BelongsTo<typeof Permiso>
 
