@@ -23,13 +23,13 @@ export default class extends BaseSeeder {
         estado: 'activo',
       },
       {
-        nombre: 'Cliente',
+        nombre: 'Usuario Empresa',
         descripcion:
           'Usuario que reporta incidencias o solicita asistencia técnica sobre los servicios contratados.',
         estado: 'activo',
       },
       {
-        nombre: 'Empresa',
+        nombre: 'Empresa Admin',
         descripcion:
           'Representa una organización cliente que contrata servicios de soporte técnico.',
         estado: 'activo',

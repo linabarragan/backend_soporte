@@ -1,7 +1,5 @@
-// app/Controllers/Http/TicketsController.ts
-
 import { HttpContext } from '@adonisjs/core/http'
-import Ticket from '../models/tickets.js'
+import Ticket from '#models/tickets' // Asegúrate de que la ruta del modelo sea correcta
 // Comentadas las importaciones de schema y rules para eliminar la validación
 // import { schema, rules } from '@adonisjs/core/validator'
 import app from '@adonisjs/core/services/app'
@@ -15,13 +13,13 @@ export default class TicketsController {
    */
   async index({ response }: HttpContext) {
     const tickets = await Ticket.query()
-     
+      
       .preload('usuarioAsignado')
       .preload('categoria')
       .preload('servicio')
       .preload('estado')
       .preload('prioridad')
-      .orderBy('id', 'desc')
+      .orderBy('id', 'desc') // Ordena por ID descendente para mostrar los más recientes primero
     return response.ok(tickets)
   }
 
@@ -31,7 +29,7 @@ export default class TicketsController {
   async show({ params, response }: HttpContext) {
     const ticket = await Ticket.query()
       .where('id', params.id)
-      
+     
       .preload('usuarioAsignado')
       .preload('categoria')
       .preload('servicio')
@@ -52,6 +50,7 @@ export default class TicketsController {
     const descripcion = request.input('descripcion')
     const estado_id = request.input('estado_id')
     const prioridad_id = request.input('prioridad_id')
+   
     const usuario_asignado_id = request.input('usuario_asignado_id')
     const categoria_id = request.input('categoria_id')
     const servicio_id = request.input('servicio_id')
@@ -73,12 +72,15 @@ export default class TicketsController {
       descripcion: descripcion,
       estadoId: estado_id,
       prioridadId: prioridad_id,
+     
       usuarioAsignadoId: usuario_asignado_id,
       categoriaId: categoria_id,
       servicioId: servicio_id,
       fechaAsignacion: DateTime.now(),
+   
     })
 
+    // Precargar las relaciones para la respuesta
     
     await ticket.load('usuarioAsignado')
     await ticket.load('categoria')
@@ -105,7 +107,7 @@ export default class TicketsController {
       'descripcion',
       'estado_id',
       'prioridad_id',
-      'cliente_id',
+      'cliente_id', // Incluir cliente_id en los datos a actualizar
       'usuario_asignado_id',
       'categoria_id',
       'servicio_id',
@@ -113,22 +115,36 @@ export default class TicketsController {
     ])
     const archivo_adjunto = request.file('archivo_adjunto')
 
-  
     // Actualizar solo los campos que fueron enviados en la solicitud
-    // Aquí usamos un enfoque más manual para evitar sobrescribir con undefined si un campo no se envía
     if (data.titulo !== undefined) ticket.titulo = data.titulo
     if (data.descripcion !== undefined) ticket.descripcion = data.descripcion
     if (data.estado_id !== undefined) ticket.estadoId = data.estado_id
     if (data.prioridad_id !== undefined) ticket.prioridadId = data.prioridad_id
     
+    // Manejar cliente_id: puede ser un número o null
+    if (data.cliente_id !== undefined) {
+  
+    }
+
     if (data.usuario_asignado_id !== undefined) ticket.usuarioAsignadoId = data.usuario_asignado_id
     if (data.categoria_id !== undefined) ticket.categoriaId = data.categoria_id
     if (data.servicio_id !== undefined) ticket.servicioId = data.servicio_id
-    // Siempre actualizamos adjuntoUrl basado en la lógica de archivo_adjunto / clear_adjunto
     
+    // Lógica para el archivo adjunto en la actualización
+    if (data.clear_adjunto) {
+      
+    } else if (archivo_adjunto) {
+      const fileName = `${cuid()}.${archivo_adjunto.extname}`
+      await archivo_adjunto.move(app.tmpPath('uploads'), {
+        name: fileName,
+        overwrite: true,
+      })
+    
+    }
 
     await ticket.save()
 
+    // Precargar las relaciones para la respuesta
    
     await ticket.load('usuarioAsignado')
     await ticket.load('categoria')

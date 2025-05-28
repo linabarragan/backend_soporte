@@ -1,10 +1,10 @@
 import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Usuario from './usuarios.js'
-import Rol from './roles.js'
+import Rol from '#models/roles'
 
 export default class UsuariosRol extends BaseModel {
-  public static table = 'usuario_rols'
+  public static table = 'usuario_roles'
   @column({ isPrimary: true })
   declare id: number
 
