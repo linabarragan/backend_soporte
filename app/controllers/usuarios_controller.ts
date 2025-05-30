@@ -1,7 +1,7 @@
 // app/Controllers/Http/UsersController.ts
 import type { HttpContext } from '@adonisjs/core/http'
 import Usuario from '#models/usuarios' // Asegúrate de que el nombre del archivo del modelo sea correcto (Usuario.js o usuarios.js)
-import hash from '@adonisjs/core/services/hash' // Importa el servicio de hash si lo usas
+
 
 export default class UsersController {
   /**
@@ -38,14 +38,14 @@ export default class UsersController {
     }
 
     try {
-      const hashedPassword = await hash.make(password) // Hashear la contraseña
+      
 
       const user = await Usuario.create({
         nombre,
         apellido,
         telefono,
         correo,
-        password: hashedPassword, // Guarda la contraseña hasheada
+        password,
         rolId, // ¡CAMBIADO A 'rolId'! Asigna el ID del rol
       })
 
@@ -84,11 +84,10 @@ export default class UsersController {
       user.telefono = telefono || user.telefono
       user.correo = correo || user.correo
       user.rolId = rolId || user.rolId // ¡CAMBIADO A 'rolId'! Actualiza el ID del rol
+      user.password = password || user.password 
 
       // Solo actualiza la contraseña si se proporciona una nueva
-      if (password) {
-        user.password = await hash.make(password)
-      }
+     
 
       await user.save()
 

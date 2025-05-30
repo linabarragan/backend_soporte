@@ -6,6 +6,7 @@ import Categoria from '../models/categorias.js'
 import Servicio from '../models/servicios.js'
 import EstadoTicket from '../models/estados_ticket.js'
 import Prioridad from '../models/prioridades.js'
+import Empresa from '../models/empresas.js'
 
 export default class Ticket extends BaseModel {
   @column({ isPrimary: true })
@@ -24,7 +25,10 @@ export default class Ticket extends BaseModel {
   declare prioridadId: number
 
   @column()
-  declare usuarioAsignadoId: number
+  declare empresasId: number
+
+  @column()
+  declare usuarioAsignadoId: number | null
 
   @column()
   declare categoriaId: number
@@ -33,7 +37,7 @@ export default class Ticket extends BaseModel {
   declare servicioId: number
 
   @column.dateTime({ autoCreate: true })
-  declare fechaAsignacion: DateTime
+  declare fechaAsignacion: DateTime | null
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -55,4 +59,7 @@ export default class Ticket extends BaseModel {
 
   @belongsTo(() => Prioridad)
   declare prioridad: BelongsTo<typeof Prioridad>
+
+  @belongsTo(() => Empresa, { foreignKey: 'empresasId' })
+  declare empresa: BelongsTo<typeof Empresa>
 }

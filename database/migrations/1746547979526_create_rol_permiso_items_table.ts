@@ -8,7 +8,7 @@ export default class extends BaseSchema {
   async up() {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id').primary()
-      table.integer('rol_id').unsigned().references('id').inTable('rols').onDelete('CASCADE')
+      table.integer('rol_id').unsigned().references('id').inTable('roles').onDelete('CASCADE')
       table.integer('item_id').unsigned().references('id').inTable('items').onDelete('CASCADE')
 
       table
