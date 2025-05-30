@@ -27,6 +27,9 @@ export default class Usuario extends compose(BaseModel, AuthFinder) {
   declare correo: string
 
   @column()
+  declare foto_perfil: string | null
+
+  @column()
   declare password: string
 
   @column.dateTime({ autoCreate: true })

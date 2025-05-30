@@ -5,8 +5,8 @@
     "outDir": "./build",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "baseUrl": ".",                             
-    "paths": {                                    
+    "baseUrl": ".",
+    "paths": {
       "#controllers/*": ["app/controllers/*"],
       "#models/*": ["app/models/*"],
       "#services/*": ["app/services/*"],

@@ -15,7 +15,7 @@ export default class TicketsController {
    */
   async index({ response }: HttpContext) {
     const tickets = await Ticket.query()
-     
+
       .preload('usuarioAsignado')
       .preload('categoria')
       .preload('servicio')
@@ -31,7 +31,7 @@ export default class TicketsController {
   async show({ params, response }: HttpContext) {
     const ticket = await Ticket.query()
       .where('id', params.id)
-      
+
       .preload('usuarioAsignado')
       .preload('categoria')
       .preload('servicio')
@@ -79,7 +79,7 @@ export default class TicketsController {
       fechaAsignacion: DateTime.now(),
     })
 
-    
+
     await ticket.load('usuarioAsignado')
     await ticket.load('categoria')
     await ticket.load('servicio')
@@ -113,23 +113,20 @@ export default class TicketsController {
     ])
     const archivo_adjunto = request.file('archivo_adjunto')
 
-  
+
     // Actualizar solo los campos que fueron enviados en la solicitud
     // Aquí usamos un enfoque más manual para evitar sobrescribir con undefined si un campo no se envía
     if (data.titulo !== undefined) ticket.titulo = data.titulo
     if (data.descripcion !== undefined) ticket.descripcion = data.descripcion
     if (data.estado_id !== undefined) ticket.estadoId = data.estado_id
     if (data.prioridad_id !== undefined) ticket.prioridadId = data.prioridad_id
-    
+
     if (data.usuario_asignado_id !== undefined) ticket.usuarioAsignadoId = data.usuario_asignado_id
     if (data.categoria_id !== undefined) ticket.categoriaId = data.categoria_id
     if (data.servicio_id !== undefined) ticket.servicioId = data.servicio_id
     // Siempre actualizamos adjuntoUrl basado en la lógica de archivo_adjunto / clear_adjunto
-    
-
     await ticket.save()
 
-   
     await ticket.load('usuarioAsignado')
     await ticket.load('categoria')
     await ticket.load('servicio')

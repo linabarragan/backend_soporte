@@ -10,6 +10,7 @@ export default class extends BaseSchema {
       table.string('apellido', 100).notNullable()
       table.string('telefono', 20).notNullable()
       table.string('correo', 255).notNullable().unique()
+      table.string('foto_perfil', 255).nullable()
       table.string('password', 180).notNullable()
 
       table.timestamp('created_at')
