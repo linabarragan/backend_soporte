@@ -19,8 +19,10 @@ export default class Rol extends BaseModel {
   @column()
   declare descripcion: string
 
-  @column()
-  declare estado: boolean
+    @column()
+  // ¡ESTE ES EL CAMBIO CLAVE!
+  // Ahora TypeScript sabe que 'estado' es una cadena que puede ser 'activo' o 'inactivo'.
+  declare estado: 'activo' | 'inactivo'
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
