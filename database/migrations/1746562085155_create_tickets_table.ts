@@ -27,6 +27,14 @@ export default class extends BaseSchema {
         .references('id')
         .inTable('usuarios')
         .onDelete('SET NULL')
+        .nullable()
+      table
+        .integer('empresas_id')
+        .unsigned()
+        .notNullable()
+        .references('id')
+        .inTable('empresas')
+        .onDelete('CASCADE')
       table
         .integer('categoria_id')
         .unsigned()
@@ -41,7 +49,7 @@ export default class extends BaseSchema {
         .references('id')
         .inTable('servicios')
         .onDelete('CASCADE')
-      table.timestamp('fecha_asignacion', { useTz: true }).defaultTo(this.now())
+      table.dateTime('fecha_asignacion').nullable() // <--- Asegúrate de que sea nullable
       table.timestamp('created_at')
       table.timestamp('updated_at')
     })

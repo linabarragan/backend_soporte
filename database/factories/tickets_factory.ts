@@ -7,11 +7,13 @@ import Categoria from '#models/categorias'
 import Servicio from '#models/servicios'
 import EstadoTicket from '#models/estados_ticket'
 import Prioridad from '#models/prioridades'
+import Empresa from '#models/empresas'
 
 export const TicketFactory = factory
   .define(Ticket, async () => {
     const usuario = await Usuario.query().select('id').orderByRaw('RAND()').firstOrFail()
     const categoria = await Categoria.query().select('id').orderByRaw('RAND()').firstOrFail()
+    const empresa = await Empresa.query().select('id').orderByRaw('RAND()').firstOrFail() // Asumiendo que 'empresa' es un usuario
     const servicio = await Servicio.query().select('id').orderByRaw('RAND()').firstOrFail()
     const estado = await EstadoTicket.query().select('id').orderByRaw('RAND()').firstOrFail()
     const prioridad = await Prioridad.query().select('id').orderByRaw('RAND()').firstOrFail()
@@ -23,6 +25,7 @@ export const TicketFactory = factory
       prioridadId: prioridad.id,
       usuarioAsignadoId: usuario.id,
       categoriaId: categoria.id,
+      empresasId: empresa.id,
       servicioId: servicio.id,
       fechaAsignacion: DateTime.fromJSDate(faker.date.recent()), // ✅ FIX aquí
     }
