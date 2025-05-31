@@ -31,16 +31,23 @@ server.use([
 /**
  * The router middleware stack runs middleware on all the HTTP
  * requests with a registered route.
+ *
+ * ¡IMPORTANTE! Hemos eliminado 'initialize_auth_middleware' de aquí.
+ * Ahora solo se aplicará donde se especifique explícitamente en las rutas.
  */
 router.use([
   () => import('@adonisjs/core/bodyparser_middleware'),
-  () => import('@adonisjs/auth/initialize_auth_middleware'),
+  // () => import('@adonisjs/auth/initialize_auth_middleware'), // <--- ¡ESTA LÍNEA DEBE SER COMENTADA O ELIMINADA!
 ])
 
 /**
  * Named middleware collection must be explicitly assigned to
  * the routes or the routes group.
+ *
+ * NOTA: 'initialize_auth_middleware' ahora se usará junto con 'auth'
+ * en las rutas específicas que lo necesiten.
  */
 export const middleware = router.named({
   auth: () => import('#middleware/auth_middleware'),
+  // auth_initialize: () => import('@adonisjs/auth/initialize_auth_middleware'), // Opcional: podrías definirlo aquí si prefieres
 })

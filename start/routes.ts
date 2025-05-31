@@ -2,146 +2,146 @@
 
 import router from '@adonisjs/core/services/router'
 import hash from '@adonisjs/core/services/hash'
-import { middleware } from '#start/kernel' // Asegúrate de que esto se use si otras rutas tienen middleware
+
 
 // ==============================================================================
 // IMPORTACIONES DE CONTROLADORES
-// Por convención, los nombres de clases (controladores) en PascalCase.
-// Los archivos fuente pueden ser snake_case (ej: roles_controller.ts)
 // ==============================================================================
 import AuthController from '#controllers/auth_controller'
-//import LoginController from '#controllers/login_controller' // Asumiendo que `login_controller.createUser` está aquí
 import UsuariosController from '#controllers/usuarios_controller'
 import TicketsController from '#controllers/tickets_controller'
-import EstadosTicketsController from '#controllers/estados_ticketsController' // Asumiendo archivo: estados_tickets_controller.ts
-import PrioridadesController from '#controllers/Prioridades_Controller'       // Asumiendo archivo: prioridades_controller.ts
-import CategoriasController from '#controllers/Categorias_Controller'         // Asumiendo archivo: categorias_controller.ts
-import ServiciosController from '#controllers/Servicios_Controller '           // Asumiendo archivo: servicios_controller.ts
-import RolesController from '#controllers/roles_controller'                   // ¡Tu controlador de CRUD de roles! Asumiendo archivo: roles_controller.ts
-import PermisosController from '#controllers/PermisosController'             // Asumiendo archivo: permisos_controller.ts
-import ItemsController from '#controllers/ItemsController'                   // Asumiendo archivo: items_controller.ts
+import EstadosTicketsController from '#controllers/estados_ticketsController'
+import PrioridadesController from '#controllers/Prioridades_Controller'
+import CategoriasController from '#controllers/Categorias_Controller'
+import ServiciosController from '#controllers/Servicios_Controller '
+import RolesController from '#controllers/roles_controller'
+import PermisosController from '#controllers/PermisosController'
+import ItemsController from '#controllers/ItemsController'
 import RolePermissionItemController from '#controllers/roles_permisos_items_controller'
-import EmpresasController from '#controllers/empresas_controller'             // Asumiendo que tienes este controlador
-import ProyectosController from '#controllers/proyectos_controller'           // Asumiendo que tienes este controlador
+import EmpresasController from '#controllers/empresas_controller'
+import ProyectosController from '#controllers/proyectos_controller'
 
 // ==============================================================================
 // RUTAS SIN AUTENTICACIÓN / GLOBALES
 // ==============================================================================
 router.get('/', async () => {
-  return { hello: 'world' }
+  return { hello: 'world' }
 })
 
 router.post('/login', [AuthController, 'login'])
-//router.post('/user', [LoginController, 'createUser']) // Usando el controlador importado
 
 router.get('/test-password', async () => {
-  const password = '1'
-  const hashed =
-    '$scrypt$n=16384,r=8,p=1$KCOc6mHQZHdIAvH4Z5Fh0A$MA72/3CwHAzLvsoBFb/X03/85V+DjeRT0S65UcLg+tKizrNEgeViEALBbsnOh/teGTIzXv88lNFuPqRZfI1KkA'
-  const result = await hash.verify(hashed, password)
-  return { result }
+  const password = '1'
+  const hashed =
+    '$scrypt$n=16384,r=8,p=1$KCOc6mHQZHdIAvH4Z5Fh0A$MA72/3CwHAzLvsoBFb/X03/85V+DjeRT0S65UcLg+tKizrNEgeViEALBbsnOh/teGTIzXv88lNFuPqRZfI1KkA'
+  const result = await hash.verify(hashed, password)
+  return { result }
 })
 
 // ==============================================================================
 // CRUD PARA ROLES (SIN MIDDLEWARE DE AUTENTICACIÓN)
-// Estas rutas serán accesibles públicamente en /api/roles
 // ==============================================================================
 router
-  .group(() => {
-    router.get('/', [RolesController, 'index'])
-    router.get('/:id', [RolesController, 'show'])
-    router.post('/', [RolesController, 'store'])
-    router.put('/:id', [RolesController, 'update'])
-    router.patch('/:id', [RolesController, 'update']) // Añadido PATCH para flexibilidad
-    router.delete('/:id', [RolesController, 'destroy'])
-    // ¡NUEVA RUTA! Para eliminar un rol de forma PERMANENTE
-    router.delete('/force/:id', [RolesController, 'forceDestroy']) 
-  })
-  .prefix('/api/roles') // Rutas: /api/roles, /api/roles/:id, etc.
+  .group(() => {
+    router.get('/', [RolesController, 'index'])
+    router.get('/:id', [RolesController, 'show'])
+    router.post('/', [RolesController, 'store'])
+    router.put('/:id', [RolesController, 'update'])
+    router.patch('/:id', [RolesController, 'update'])
+    router.delete('/:id', [RolesController, 'destroy'])
+    router.delete('/force/:id', [RolesController, 'forceDestroy'])
+  })
+  .prefix('/api/roles')
 
 // ==============================================================================
-// GRUPO GLOBAL PARA OTRAS RUTAS DE API (Con o sin middleware, según lo definas)
+// GRUPO GLOBAL PARA OTRAS RUTAS DE API (Sin middleware de autenticación global)
 // ==============================================================================
 router
-  .group(() => {
-    // Dashboard (protegido por middleware)
-    router
-      .get('/dashboard', [() => import('#controllers/dashboard_controller'), 'index'])
-      .middleware([middleware.auth({ guards: ['api'] })])
+  .group(() => {
+    // ====================================================================
+    // Ruta /api/dashboard (SIN MIDDLEWARE DE AUTENTICACIÓN)
+    // ====================================================================
+    router.get('/dashboard', [() => import('#controllers/dashboard_controller'), 'index'])
+    // La línea .middleware() fue eliminada intencionalmente de aquí.
 
-    // Rutas de Usuarios (CRUD)
-    router.group(() => {
-      router.get('/', [UsuariosController, 'index'])
-      router.post('/', [UsuariosController, 'store'])
-      router.put('/:id', [UsuariosController, 'update'])
-      router.delete('/:id', [UsuariosController, 'destroy'])
-      router.get('/asignables', [UsuariosController, 'index']) // Si tiene una lógica diferente, método diferente
-    }).prefix('/usuarios') // -> /api/usuarios
+    // ====================================================================
+    // Ruta /api/me (SIN MIDDLEWARE DE AUTENTICACIÓN Y SIN LA PALABRA 'auth')
+    // Siempre devolverá { user: null } ya que no hay autenticación.
+    // ====================================================================
+    router.get('/me', async ({ response }) => { // ¡'auth' ha sido eliminado de los parámetros!
+      return response.ok({ user: null }) // Siempre devolverá null para el usuario
+    })
 
-    // Rutas para Tickets (Resource)
-    router.group(() => {
-      router.get('/', [TicketsController, 'index'])
-      router.get('/:id', [TicketsController, 'show'])
-      router.post('/', [TicketsController, 'store'])
-      router.patch('/:id', [TicketsController, 'update'])
-      router.delete('/:id', [TicketsController, 'destroy'])
-    }).prefix('/tickets') // -> /api/tickets
+    // Rutas de Usuarios (CRUD)
+    router.group(() => {
+      router.get('/', [UsuariosController, 'index'])
+      router.post('/', [UsuariosController, 'store'])
+      router.put('/:id', [UsuariosController, 'update'])
+      router.delete('/:id', [UsuariosController, 'destroy'])
+      router.get('/asignables', [UsuariosController, 'index'])
+    }).prefix('/usuarios')
 
-    // Rutas para Entidades Maestras (Lectura - si necesitan CRUD, moverlas a sus propios grupos)
-    router.get('/estados', [EstadosTicketsController, 'index'])    // -> /api/estados
-    router.get('/prioridades', [PrioridadesController, 'index'])  // -> /api/prioridades
-    router.get('/categorias', [CategoriasController, 'index'])    // -> /api/categorias
-    router.get('/servicios', [ServiciosController, 'index'])      // -> /api/servicios
+    // Rutas para Tickets (Resource)
+    router.group(() => {
+      router.get('/', [TicketsController, 'index'])
+      router.get('/:id', [TicketsController, 'show'])
+      router.post('/', [TicketsController, 'store'])
+      router.patch('/:id', [TicketsController, 'update'])
+      router.delete('/:id', [TicketsController, 'destroy'])
+    }).prefix('/tickets')
 
-    // CRUD para Permisos
-    router.group(() => {
-      router.get('/', [PermisosController, 'index'])
-      router.get('/:id', [PermisosController, 'show'])
-      router.post('/', [PermisosController, 'store'])
-      router.put('/:id', [PermisosController, 'update'])
-      router.patch('/:id', [PermisosController, 'update'])
-      router.delete('/:id', [PermisosController, 'destroy'])
-    }).prefix('/permisos') // -> /api/permisos
+    // Rutas para Entidades Maestras (Lectura)
+    router.get('/estados', [EstadosTicketsController, 'index'])
+    router.get('/prioridades', [PrioridadesController, 'index'])
+    router.get('/categorias', [CategoriasController, 'index'])
+    router.get('/servicios', [ServiciosController, 'index'])
 
-    // CRUD para Ítems
-    router.group(() => {
-      router.get('/', [ItemsController, 'index'])
-      router.get('/:id', [ItemsController, 'show'])
-      router.post('/', [ItemsController, 'store'])
-      router.put('/:id', [ItemsController, 'update'])
-      router.patch('/:id', [ItemsController, 'update'])
-      router.delete('/:id', [ItemsController, 'destroy'])
-    }).prefix('/items') // -> /api/items
+    // CRUD para Permisos
+    router.group(() => {
+      router.get('/', [PermisosController, 'index'])
+      router.get('/:id', [PermisosController, 'show'])
+      router.post('/', [PermisosController, 'store'])
+      router.put('/:id', [PermisosController, 'update'])
+      router.patch('/:id', [PermisosController, 'update'])
+      router.delete('/:id', [PermisosController, 'destroy'])
+    }).prefix('/permisos')
 
-    // CRUD para Empresas
-    router.group(() => {
-      router.get('/', [EmpresasController, 'index'])
-      router.post('/', [EmpresasController, 'store'])
-      router.put('/:id', [EmpresasController, 'update'])
-      router.patch('/:id', [EmpresasController, 'update'])
-      router.delete('/:id', [EmpresasController, 'destroy'])
-    }).prefix('/empresas') // -> /api/empresas
+    // CRUD para Ítems
+    router.group(() => {
+      router.get('/', [ItemsController, 'index'])
+      router.get('/:id', [ItemsController, 'show'])
+      router.post('/', [ItemsController, 'store'])
+      router.put('/:id', [ItemsController, 'update'])
+      router.patch('/:id', [ItemsController, 'update'])
+      router.delete('/:id', [ItemsController, 'destroy'])
+    }).prefix('/items')
 
-    // CRUD para Proyectos
-    router.group(() => {
-      router.get('/', [ProyectosController, 'index'])
-      router.post('/', [ProyectosController, 'store'])
-      router.put('/:id', [ProyectosController, 'update'])
-      router.patch('/:id', [ProyectosController, 'update'])
-      router.delete('/:id', [ProyectosController, 'destroy'])
-    }).prefix('/proyectos') // -> /api/proyectos
+    // CRUD para Empresas
+    router.group(() => {
+      router.get('/', [EmpresasController, 'index'])
+      router.post('/', [EmpresasController, 'store'])
+      router.put('/:id', [EmpresasController, 'update'])
+      router.patch('/:id', [EmpresasController, 'update'])
+      router.delete('/:id', [EmpresasController, 'destroy'])
+    }).prefix('/empresas')
 
-    // Rutas para Asignaciones de Roles, Permisos e Items (tabla pivote)
-    router.group(() => {
-      router.get('/', [RolePermissionItemController, 'index'])
-      router.post('/', [RolePermissionItemController, 'store'])
-      router.put('/actualizar-por-rol-item', [RolePermissionItemController, 'updateByRolItem'])
-      router.delete('/:id', [RolePermissionItemController, 'destroy'])
-    }).prefix('/asignaciones') // -> /api/asignaciones
+    // CRUD para Proyectos
+    router.group(() => {
+      router.get('/', [ProyectosController, 'index'])
+      router.post('/', [ProyectosController, 'store'])
+      router.put('/:id', [ProyectosController, 'update'])
+      router.patch('/:id', [ProyectosController, 'update'])
+      router.delete('/:id', [ProyectosController, 'destroy'])
+    }).prefix('/proyectos')
 
-  })
-  .prefix('/api') // ¡Este grupo principal para /api, sin middleware aquí si quieres todas las rutas internas abiertas!
-  // .middleware([middleware.auth({ guards: ['api'] })]) // COMENTAR O ELIMINAR si NO QUIERES middleware para todo el grupo /api
+    // Rutas para Asignaciones de Roles, Permisos e Items (tabla pivote)
+    router.group(() => {
+      router.get('/', [RolePermissionItemController, 'index'])
+      router.post('/', [RolePermissionItemController, 'store'])
+      router.put('/actualizar-por-rol-item', [RolePermissionItemController, 'updateByRolItem'])
+      router.delete('/:id', [RolePermissionItemController, 'destroy'])
+    }).prefix('/asignaciones')
 
-// NOTA: Se eliminaron las rutas duplicadas `router.get('/roles', [RoleController, 'index'])` y similares
-// que estaban al final de tu archivo original, para evitar conflictos.
+  })
+  .prefix('/api') // Este es el prefijo para todas las rutas dentro de este grupo.
+  // La línea .middleware() para todo el grupo ha sido eliminada intencionalmente.
