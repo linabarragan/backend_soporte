@@ -93,4 +93,44 @@ export default class RolePermissionItemController {
 
     return response.ok({ message: 'Asignación eliminada correctamente.' })
   }
+
+  public async eliminarPorRolItem({ params, response }: HttpContext) {
+    const { rolId, itemId } = params // Captura los parámetros de la URL
+
+    // 1. Validar que los IDs existen y son numéricos
+    // Adonis valida los parámetros de ruta por defecto, pero una verificación explícita es buena.
+    if (!rolId || !itemId || isNaN(Number(rolId)) || isNaN(Number(itemId))) {
+      return response.badRequest({ message: 'IDs de rol e ítem inválidos o faltantes en la URL.' })
+    }
+
+    try {
+      // 2. Ejecutar la eliminación en la base de datos
+      // Esto elimina todas las filas de la tabla roles_permisos_item
+      // donde rol_id coincida con rolId y item_id coincida con itemId.
+      const deletedRows = await RolesPermisosItem.query()
+        .where('rol_id', Number(rolId)) // Asegúrate de castear a Number si tus IDs de DB son numéricos
+        .where('item_id', Number(itemId)) // Asegúrate de castear a Number
+        .delete()
+
+      // 3. Responder al cliente
+      if (deletedRows > 0) {
+        return response.ok({
+          message: `Se eliminaron ${deletedRows} asignaciones para el rol ${rolId} y el ítem ${itemId}.`,
+          deletedCount: deletedRows,
+        })
+      } else {
+        // Esto se ejecutará si no se encontraron asignaciones para esos IDs
+        return response.notFound({
+          message:
+            'No se encontraron asignaciones para eliminar con el rol y el ítem especificados.',
+        })
+      }
+    } catch (error) {
+      console.error('Error en el servidor al eliminar asignaciones por rol/ítem:', error)
+      return response.internalServerError({
+        message: 'Error interno del servidor al eliminar asignaciones.',
+        error: error.message,
+      })
+    }
+  }
 }
