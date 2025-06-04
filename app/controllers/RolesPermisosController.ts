@@ -15,7 +15,10 @@ export default class RolesPermisosController {
       return response.ok(roles)
     } catch (error) {
       console.error('Error al obtener roles:', error)
-      return response.internalServerError({ message: 'Error al obtener roles', error: (error as any).message })
+      return response.internalServerError({
+        message: 'Error al obtener roles',
+        error: (error as any).message,
+      })
     }
   }
 
@@ -25,7 +28,10 @@ export default class RolesPermisosController {
       return response.ok(permisos)
     } catch (error) {
       console.error('Error al obtener permisos:', error)
-      return response.internalServerError({ message: 'Error al obtener permisos', error: (error as any).message })
+      return response.internalServerError({
+        message: 'Error al obtener permisos',
+        error: (error as any).message,
+      })
     }
   }
 
@@ -35,7 +41,10 @@ export default class RolesPermisosController {
       return response.ok(items)
     } catch (error) {
       console.error('Error al obtener ítems:', error)
-      return response.internalServerError({ message: 'Error al obtener ítems', error: (error as any).message })
+      return response.internalServerError({
+        message: 'Error al obtener ítems',
+        error: (error as any).message,
+      })
     }
   }
 
@@ -50,7 +59,10 @@ export default class RolesPermisosController {
       return response.ok(asignaciones)
     } catch (error) {
       console.error('Error al obtener todas las asignaciones:', error)
-      return response.internalServerError({ message: 'Error al obtener todas las asignaciones', error: (error as any).message })
+      return response.internalServerError({
+        message: 'Error al obtener todas las asignaciones',
+        error: (error as any).message,
+      })
     }
   }
 
@@ -59,7 +71,7 @@ export default class RolesPermisosController {
       const rolId = params.rolId
 
       if (!rolId || isNaN(Number(rolId))) {
-        return response.badRequest({ message: 'ID de rol inválido.' });
+        return response.badRequest({ message: 'ID de rol inválido.' })
       }
 
       const asignaciones = await RolPermisoItem.query()
@@ -72,7 +84,10 @@ export default class RolesPermisosController {
       return response.ok(asignaciones)
     } catch (error) {
       console.error(`Error al obtener asignaciones para el rol ${params.rolId}:`, error)
-      return response.internalServerError({ message: 'Error al obtener asignaciones', error: (error as any).message })
+      return response.internalServerError({
+        message: 'Error al obtener asignaciones',
+        error: (error as any).message,
+      })
     }
   }
 
@@ -85,57 +100,64 @@ export default class RolesPermisosController {
       'selectedVistas',
     ])
 
-    const cleanRolId = Number(rolId);
-    const cleanItemId = itemId === undefined || itemId === '' ? null : Number(itemId);
+    const cleanRolId = Number(rolId)
+    const cleanItemId = itemId === undefined || itemId === '' ? null : Number(itemId)
 
     if (isNaN(cleanRolId)) {
-      return response.badRequest({ message: 'El ID de rol es inválido.' });
+      return response.badRequest({ message: 'El ID de rol es inválido.' })
     }
     if (itemId !== undefined && itemId !== '' && isNaN(cleanItemId as number)) {
-      return response.badRequest({ message: 'El ID del ítem debe ser un número válido o nulo.' });
+      return response.badRequest({ message: 'El ID del ítem debe ser un número válido o nulo.' })
     }
 
     if (!selectedPermisos && !selectedVistas) {
-      return response.badRequest({ message: 'Debe seleccionar al menos un permiso o una vista para asignar.' });
+      return response.badRequest({
+        message: 'Debe seleccionar al menos un permiso o una vista para asignar.',
+      })
     }
 
-    const permisoLeer = await Permiso.findBy('nombre', 'leer');
+    const permisoLeer = await Permiso.findBy('nombre', 'leer')
     if (!permisoLeer) {
-      return response.internalServerError({ message: "El permiso 'leer' (para vistas) no fue encontrado. Asegúrate de crearlo." });
+      return response.internalServerError({
+        message: "El permiso 'leer' (para vistas) no fue encontrado. Asegúrate de crearlo.",
+      })
     }
-    const leerPermisoId = permisoLeer.id;
+    const leerPermisoId = permisoLeer.id
 
-    const assignmentsToCreate: Array<{ rolId: number; permisoId: number; itemId: number | null }> = [];
+    const assignmentsToCreate: Array<{ rolId: number; permisoId: number; itemId: number | null }> =
+      []
 
     if (selectedPermisos && selectedPermisos.length > 0) {
       for (const permisoId of selectedPermisos) {
         if (permisoId === leerPermisoId) {
-            continue;
+          continue
         }
         assignmentsToCreate.push({
           rolId: cleanRolId,
           permisoId: permisoId,
           itemId: cleanItemId,
-        });
+        })
       }
     }
 
     if (selectedVistas && selectedVistas.length > 0) {
       for (const vistaId of selectedVistas) {
-        const numericVistaId = Number(vistaId);
+        const numericVistaId = Number(vistaId)
         if (isNaN(numericVistaId)) {
-          return response.badRequest({ message: `El ID de la vista '${vistaId}' no es un número válido.` });
+          return response.badRequest({
+            message: `El ID de la vista '${vistaId}' no es un número válido.`,
+          })
         }
         assignmentsToCreate.push({
           rolId: cleanRolId,
           permisoId: leerPermisoId,
           itemId: numericVistaId,
-        });
+        })
       }
     }
 
     if (assignmentsToCreate.length === 0) {
-        return response.badRequest({ message: 'No se generaron asignaciones válidas para crear.' });
+      return response.badRequest({ message: 'No se generaron asignaciones válidas para crear.' })
     }
 
     try {
@@ -162,38 +184,46 @@ export default class RolesPermisosController {
         }
       }
 
-      return response.created({ message: `Asignaciones procesadas. ${createdCount} nuevas asignaciones creadas.`, createdRecords: assignmentsToCreate })
+      return response.created({
+        message: `Asignaciones procesadas. ${createdCount} nuevas asignaciones creadas.`,
+        createdRecords: assignmentsToCreate,
+      })
     } catch (error) {
       console.error('Error al crear asignaciones:', error)
       if ((error as any).code === '23505' || (error as any).code === 'ER_DUP_ENTRY') {
         return response.conflict({ message: 'Algunas asignaciones ya existen.' })
       }
-      return response.internalServerError({ message: 'Error al crear asignaciones', error: (error as any).message })
+      return response.internalServerError({
+        message: 'Error al crear asignaciones',
+        error: (error as any).message,
+      })
     }
   }
 
   // --- Método para eliminar asignación (Eliminar / Delete) - CORREGIDO Y COMPLETO ---
   async deleteAsignacion({ params, response }: HttpContext) {
-    const { rolId, permisoId, itemId } = params;
+    const { rolId, permisoId, itemId } = params
 
-    console.log('Backend DELETE: Recibiendo params del URL:', { rolId, permisoId, itemId });
+    console.log('Backend DELETE: Recibiendo params del URL:', { rolId, permisoId, itemId })
 
-    const numericRolId = Number(rolId);
-    const numericPermisoId = Number(permisoId);
+    const numericRolId = Number(rolId)
+    const numericPermisoId = Number(permisoId)
 
     if (isNaN(numericRolId) || isNaN(numericPermisoId)) {
-      console.error('Backend DELETE: rolId o permisoId son inválidos o "undefined"');
-      return response.badRequest({ message: 'Los IDs de rol o permiso no son válidos.' });
+      console.error('Backend DELETE: rolId o permisoId son inválidos o "undefined"')
+      return response.badRequest({ message: 'Los IDs de rol o permiso no son válidos.' })
     }
 
-    let actualItemId: number | null = null;
-    if (itemId === 'null') { // Si el string es 'null', convertir a null
-      actualItemId = null;
-    } else if (itemId !== undefined && itemId !== null && itemId !== '') { // Si tiene valor, intentar convertir a número
-      actualItemId = Number(itemId);
+    let actualItemId: number | null = null
+    if (itemId === 'null') {
+      // Si el string es 'null', convertir a null
+      actualItemId = null
+    } else if (itemId !== undefined && itemId !== null && itemId !== '') {
+      // Si tiene valor, intentar convertir a número
+      actualItemId = Number(itemId)
       if (isNaN(actualItemId)) {
-        console.error('Backend DELETE: ID del ítem no válido (NaN después de conversión):', itemId);
-        return response.badRequest({ message: 'El ID del ítem no es válido.' });
+        console.error('Backend DELETE: ID del ítem no válido (NaN después de conversión):', itemId)
+        return response.badRequest({ message: 'El ID del ítem no es válido.' })
       }
     }
     // Si itemId es undefined, null, o '', actualItemId ya es null.
@@ -201,8 +231,8 @@ export default class RolesPermisosController {
     console.log('Backend DELETE: Valores procesados para la consulta:', {
       numericRolId,
       numericPermisoId,
-      actualItemId
-    });
+      actualItemId,
+    })
 
     try {
       const query = RolPermisoItem.query()
@@ -210,14 +240,14 @@ export default class RolesPermisosController {
         .where('permiso_id', numericPermisoId)
 
       if (actualItemId === null) {
-        query.whereNull('item_id');
+        query.whereNull('item_id')
       } else {
-        query.where('item_id', actualItemId);
+        query.where('item_id', actualItemId)
       }
 
-      const deletedRows = await query.delete();
+      const deletedRows = await query.delete()
 
-      console.log('Backend DELETE: Filas eliminadas:', deletedRows);
+      console.log('Backend DELETE: Filas eliminadas:', deletedRows)
 
       if (deletedRows === 0) {
         return response.notFound({ message: 'Asignación no encontrada o ya eliminada.' })
@@ -225,8 +255,14 @@ export default class RolesPermisosController {
 
       return response.noContent() // 204 No Content
     } catch (error) {
-      console.error(`Error al eliminar asignación para Rol:${rolId}, Permiso:${permisoId}, Item:${itemId}:`, error)
-      return response.internalServerError({ message: 'Error al eliminar asignación', error: (error as any).message })
+      console.error(
+        `Error al eliminar asignación para Rol:${rolId}, Permiso:${permisoId}, Item:${itemId}:`,
+        error
+      )
+      return response.internalServerError({
+        message: 'Error al eliminar asignación',
+        error: (error as any).message,
+      })
     }
   }
 
