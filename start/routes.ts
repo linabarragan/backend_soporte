@@ -33,6 +33,9 @@ router.get('/', async () => {
 router.post('/login', [AuthController, 'login'])
 //router.post('/user', [LoginController, 'createUser']) // Usando el controlador importado
 
+router.post('/forgot-password', [AuthController, 'forgotPassword'])
+router.post('/reset-password', [AuthController, 'resetPassword'])
+
 router.get('/test-password', async () => {
   const password = '1'
   const hashed =

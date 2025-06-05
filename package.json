@@ -55,6 +55,7 @@
     "@adonisjs/core": "^6.18.0",
     "@adonisjs/cors": "^2.2.1",
     "@adonisjs/lucid": "^21.6.0",
+    "@adonisjs/mail": "^9.2.2",
     "@faker-js/faker": "^9.8.0",
     "@vinejs/vine": "^3.0.1",
     "argon2": "^0.43.0",
