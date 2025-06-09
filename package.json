@@ -54,13 +54,15 @@
     "@adonisjs/auth": "^9.4.0",
     "@adonisjs/core": "^6.18.0",
     "@adonisjs/cors": "^2.2.1",
-    "@adonisjs/lucid": "^21.6.0",
+    "@adonisjs/lucid": "^21.6.1",
     "@faker-js/faker": "^9.8.0",
     "@vinejs/vine": "^3.0.1",
     "argon2": "^0.43.0",
+    "firebase-admin": "^13.4.0",
     "luxon": "^3.6.1",
     "mysql2": "^3.14.1",
-    "reflect-metadata": "^0.2.2"
+    "reflect-metadata": "^0.2.2",
+    "uuid": "^11.1.0"
   },
   "hotHook": {
     "boundaries": [

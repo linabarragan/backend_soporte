@@ -16,15 +16,23 @@ export default class AuthController {
       if (!isPasswordValid) {
         return response.unauthorized({ message: 'Correo o contraseña inválidos' })
       }
-      const token = await Usuario.accessTokens.create(user)
+      const token = await Usuario.accessTokens.create(user!)
+      const userData = {
+        id: user.id,
+        correo: user.correo,
+        nombre: user.nombre,
+        apellido: user.apellido,
+        telefono: user.telefono,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        profilePictureUrl: user.foto_perfil,
+      }
+      console.log('User data:', userData)
       return {
         type: 'bearer',
+
         token: token,
-        user: {
-          id: user.id,
-          correo: user.correo,
-          nombre: user.nombre,
-        },
+        user: userData,
       }
     } catch (error) {
       return response.internalServerError({ message: 'Error interno del servidor' })

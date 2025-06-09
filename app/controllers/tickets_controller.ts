@@ -13,6 +13,7 @@ export default class TicketsController {
    */
   async index({ response }: HttpContext) {
     const tickets = await Ticket.query()
+
       .preload('usuarioAsignado')
       .preload('categoria')
       .preload('empresa')
@@ -78,7 +79,6 @@ export default class TicketsController {
       categoriaId: data.categoria_id,
       servicioId: data.servicio_id,
     }
-
     // Lógica para usuarioAsignadoId y fechaAsignacion
     if (data.usuario_asignado_id) {
       ticketData.usuarioAsignadoId = data.usuario_asignado_id // Asigna el ID del usuario
@@ -92,6 +92,7 @@ export default class TicketsController {
     const ticket = await Ticket.create(ticketData)
 
     // Precargar las relaciones para la respuesta
+
     await ticket.load('usuarioAsignado')
     await ticket.load('categoria')
     await ticket.load('empresa')
