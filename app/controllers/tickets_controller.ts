@@ -1,7 +1,5 @@
-// app/Controllers/Http/TicketsController.ts
-
 import { HttpContext } from '@adonisjs/core/http'
-import Ticket from '../models/tickets.js'
+import Ticket from '#models/tickets'
 // Comentadas las importaciones de schema y rules para eliminar la validación
 // import { schema, rules } from '@adonisjs/core/validator'
 import app from '@adonisjs/core/services/app'
@@ -18,10 +16,11 @@ export default class TicketsController {
 
       .preload('usuarioAsignado')
       .preload('categoria')
+      .preload('empresa')
       .preload('servicio')
       .preload('estado')
       .preload('prioridad')
-      .orderBy('id', 'desc')
+      .orderBy('id', 'desc') // Ordena por ID descendente para mostrar los más recientes primero
     return response.ok(tickets)
   }
 
@@ -34,6 +33,7 @@ export default class TicketsController {
 
       .preload('usuarioAsignado')
       .preload('categoria')
+      .preload('empresa')
       .preload('servicio')
       .preload('estado')
       .preload('prioridad')
@@ -43,45 +43,59 @@ export default class TicketsController {
 
   /**
    * Crear un nuevo ticket.
-   * ¡ADVERTENCIA! Validación removida temporalmente.
+   * ¡ADVERTENCIA! Validación removida temporalmente. (Recomendado: reintroducir validación)
    */
   async store({ request, response }: HttpContext) {
-    // Ya no usamos request.validate(). Accedemos a los campos directamente.
-    // Esto es DANGEROUS para producción.
-    const titulo = request.input('titulo')
-    const descripcion = request.input('descripcion')
-    const estado_id = request.input('estado_id')
-    const prioridad_id = request.input('prioridad_id')
-    const usuario_asignado_id = request.input('usuario_asignado_id')
-    const categoria_id = request.input('categoria_id')
-    const servicio_id = request.input('servicio_id')
-    const archivo_adjunto = request.file('archivo_adjunto') // Obtener el archivo directamente
+    // Es mejor usar request.only para obtener todos los datos a la vez
+    const data = request.only([
+      'titulo',
+      'descripcion',
+      'estado_id',
+      'prioridad_id',
+      'empresas_id',
+      'usuario_asignado_id', // Nombre recibido del frontend
+      'categoria_id',
+      'servicio_id',
+    ])
+    const archivoAdjunto = request.file('archivo_adjunto')
 
-    let adjuntoUrl: string | null = null
-
-    if (archivo_adjunto) {
-      const fileName = `${cuid()}.${archivo_adjunto.extname}`
-      await archivo_adjunto.move(app.tmpPath('uploads'), {
+    if (archivoAdjunto) {
+      const fileName = `${cuid()}.${archivoAdjunto.extname}`
+      await archivoAdjunto.move(app.tmpPath('uploads'), {
         name: fileName,
         overwrite: true,
       })
-      adjuntoUrl = `/uploads/${fileName}`
+      // Si guardas la ruta del archivo, podrías añadirla al ticket
+      // ticket.nombreArchivoAdjunto = fileName
     }
 
-    const ticket = await Ticket.create({
-      titulo: titulo,
-      descripcion: descripcion,
-      estadoId: estado_id,
-      prioridadId: prioridad_id,
-      usuarioAsignadoId: usuario_asignado_id,
-      categoriaId: categoria_id,
-      servicioId: servicio_id,
-      fechaAsignacion: DateTime.now(),
-    })
+    // Crear un objeto para los datos del ticket
+    const ticketData: Partial<Ticket> = {
+      titulo: data.titulo,
+      descripcion: data.descripcion,
+      estadoId: data.estado_id,
+      prioridadId: data.prioridad_id,
+      empresasId: data.empresas_id,
+      categoriaId: data.categoria_id,
+      servicioId: data.servicio_id,
+    }
+    // Lógica para usuarioAsignadoId y fechaAsignacion
+    if (data.usuario_asignado_id) {
+      ticketData.usuarioAsignadoId = data.usuario_asignado_id // Asigna el ID del usuario
+      ticketData.fechaAsignacion = DateTime.now() // <--- ASIGNAR FECHA ACTUAL DE LUXON
+    } else {
+      // Si no hay usuario_asignado_id, asegúrate de que sean nulos (si es permitido por DB/modelo)
+      ticketData.usuarioAsignadoId = null
+      ticketData.fechaAsignacion = null
+    }
 
+    const ticket = await Ticket.create(ticketData)
+
+    // Precargar las relaciones para la respuesta
 
     await ticket.load('usuarioAsignado')
     await ticket.load('categoria')
+    await ticket.load('empresa')
     await ticket.load('servicio')
     await ticket.load('estado')
     await ticket.load('prioridad')
@@ -105,30 +119,57 @@ export default class TicketsController {
       'descripcion',
       'estado_id',
       'prioridad_id',
-      'cliente_id',
+      'empresas_id', // Incluir cliente_id en los datos a actualizar
       'usuario_asignado_id',
       'categoria_id',
       'servicio_id',
       'clear_adjunto', // Mantener esto si lo necesitas para la lógica del adjunto
     ])
-    const archivo_adjunto = request.file('archivo_adjunto')
-
+    const archivoAdjunto = request.file('archivo_adjunto')
 
     // Actualizar solo los campos que fueron enviados en la solicitud
-    // Aquí usamos un enfoque más manual para evitar sobrescribir con undefined si un campo no se envía
     if (data.titulo !== undefined) ticket.titulo = data.titulo
     if (data.descripcion !== undefined) ticket.descripcion = data.descripcion
     if (data.estado_id !== undefined) ticket.estadoId = data.estado_id
     if (data.prioridad_id !== undefined) ticket.prioridadId = data.prioridad_id
 
-    if (data.usuario_asignado_id !== undefined) ticket.usuarioAsignadoId = data.usuario_asignado_id
+    // Manejar cliente_id: puede ser un número o null
+    if (data.empresas_id !== undefined) ticket.empresasId = data.empresas_id
+
+    if (data.usuario_asignado_id !== undefined) {
+      // Si el usuario asignado cambia O se asigna por primera vez
+      if (ticket.usuarioAsignadoId !== data.usuario_asignado_id) {
+        ticket.usuarioAsignadoId = data.usuario_asignado_id
+        if (data.usuario_asignado_id !== null) {
+          // Si se asigna a alguien
+          ticket.fechaAsignacion = DateTime.now() // Actualiza la fecha de asignación
+        } else {
+          // Si se desasigna
+          ticket.fechaAsignacion = null // O la dejas como estaba, dependiendo de tu lógica
+        }
+      }
+    }
+
     if (data.categoria_id !== undefined) ticket.categoriaId = data.categoria_id
     if (data.servicio_id !== undefined) ticket.servicioId = data.servicio_id
-    // Siempre actualizamos adjuntoUrl basado en la lógica de archivo_adjunto / clear_adjunto
+
+    // Lógica para el archivo adjunto en la actualización
+    if (data.clear_adjunto) {
+    } else if (archivoAdjunto) {
+      const fileName = `${cuid()}.${archivoAdjunto.extname}`
+      await archivoAdjunto.move(app.tmpPath('uploads'), {
+        name: fileName,
+        overwrite: true,
+      })
+    }
+
     await ticket.save()
+
+    // Precargar las relaciones para la respuesta
 
     await ticket.load('usuarioAsignado')
     await ticket.load('categoria')
+    await ticket.load('empresa') // Asegúrate de que la relación empresa esté definida en el modelo Ticket
     await ticket.load('servicio')
     await ticket.load('estado')
     await ticket.load('prioridad')

@@ -30,7 +30,8 @@ export default class AuthController {
       console.log('User data:', userData)
       return {
         type: 'bearer',
-        token: token.value,
+
+        token: token,
         user: userData,
       }
     } catch (error) {

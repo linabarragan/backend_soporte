@@ -7,10 +7,19 @@
     "emitDecoratorMetadata": true,
     "baseUrl": ".",
     "paths": {
-      "#controllers/*": ["app/controllers/*"],
-      "#models/*": ["app/models/*"],
-      "#services/*": ["app/services/*"],
-      "#validators/*": ["app/validators/*"]
+       "#controllers/*": ["./app/controllers/*"], // Añadido './'
+      "#models/*": ["./app/models/*"],           // Añadido './'
+      "#services/*": ["./app/services/*"],       // Añadido './'
+      "#validators/*": ["./app/validators/*"]    // Añadido './'
+      // También deberías tener todos los paths predeterminados de AdonisJS si los has eliminado
+      // como #exceptions, #mails, #middleware, #start, #tests, etc.
     }
-  }
+  },
+  "include": [
+    "**/*" // Esto es importante para que TypeScript incluya todos los archivos
+  ],
+  "exclude": [
+    "node_modules",
+    "build" // Excluye las carpetas que no deben ser analizadas
+  ]
 }

@@ -1,8 +1,10 @@
 import { DateTime } from 'luxon'
 import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
-import Permiso from '../models/permisos.js'
-import Item from '../models/items.js'
+
+// ¡IMPORTACIONES CORREGIDAS CON ALIASES!
+import Permiso from '#models/permisos'
+import Item from '#models/items'
 
 export default class PermisoItem extends BaseModel {
   public static table = 'permisos_item'
