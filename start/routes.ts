@@ -2,15 +2,12 @@
 
 import router from '@adonisjs/core/services/router'
 import hash from '@adonisjs/core/services/hash'
-import { middleware } from '#start/kernel' // Asegúrate de que esto se use si otras rutas tienen middleware
+
 
 // ==============================================================================
 // IMPORTACIONES DE CONTROLADORES
-// Por convención, los nombres de clases (controladores) en PascalCase.
-// Los archivos fuente pueden ser snake_case (ej: roles_controller.ts)
 // ==============================================================================
 import AuthController from '#controllers/auth_controller'
-//import LoginController from '#controllers/login_controller' // Asumiendo que `login_controller.createUser` está aquí
 import UsuariosController from '#controllers/usuarios_controller'
 import TicketsController from '#controllers/tickets_controller'
 import EstadosTicketsController from '#controllers/estados_ticketsController' // Asumiendo archivo: estados_tickets_controller.ts
@@ -31,7 +28,6 @@ router.get('/', async () => {
 })
 
 router.post('/login', [AuthController, 'login'])
-//router.post('/user', [LoginController, 'createUser']) // Usando el controlador importado
 
 router.post('/forgot-password', [AuthController, 'forgotPassword'])
 router.post('/reset-password', [AuthController, 'resetPassword'])
@@ -46,7 +42,6 @@ router.get('/test-password', async () => {
 
 // ==============================================================================
 // CRUD PARA ROLES (SIN MIDDLEWARE DE AUTENTICACIÓN)
-// Estas rutas serán accesibles públicamente en /api/roles
 // ==============================================================================
 router
   .group(() => {
@@ -62,14 +57,14 @@ router
   .prefix('/api/roles') // Rutas: /api/roles, /api/roles/:id, etc.
 
 // ==============================================================================
-// GRUPO GLOBAL PARA OTRAS RUTAS DE API (Con o sin middleware, según lo definas)
+// GRUPO GLOBAL PARA OTRAS RUTAS DE API (Sin middleware de autenticación global)
 // ==============================================================================
 router
   .group(() => {
     // Dashboard (protegido por middleware)
     router
       .get('/dashboard', [() => import('#controllers/dashboard_controller'), 'index'])
-      .middleware([middleware.auth({ guards: ['api'] })]) // Rutas de Usuarios (CRUD)
+      
 
     router
       .group(() => {
@@ -160,5 +155,4 @@ router
   .prefix('/api') // ¡Este grupo principal para /api, sin middleware aquí si quieres todas las rutas internas abiertas!
 // .middleware([middleware.auth({ guards: ['api'] })]) // COMENTAR O ELIMINAR si NO QUIERES middleware para todo el grupo /api
 
-// NOTA: Se eliminaron las rutas duplicadas `router.get('/roles', [RoleController, 'index'])` y similares
-// que estaban al final de tu archivo original, para evitar conflictos.
+ 
