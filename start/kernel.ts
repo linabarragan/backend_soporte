@@ -49,5 +49,5 @@ router.use([
  */
 export const middleware = router.named({
   auth: () => import('#middleware/auth_middleware'),
-  // auth_initialize: () => import('@adonisjs/auth/initialize_auth_middleware'), // Opcional: podrías definirlo aquí si prefieres
+  //auth_initialize: () => import('@adonisjs/auth/initialize_auth_middleware'), // Opcional: podrías definirlo aquí si prefieres
 })

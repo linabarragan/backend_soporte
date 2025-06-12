@@ -8,7 +8,6 @@ export default class DashboardController {
   public async index({ response }: HttpContext) {
     // La variable 'user' es null por defecto, ya que no estamos usando 'auth' para obtenerla aquí.
     // const user = null; // <- Esta línea ya no es necesaria si la lógica de tareas pendientes no lo usa.
-    
     try {
       const ESTADO_ABIERTO_ID = 1
       const ESTADO_CERRADO_ID = 6
@@ -45,8 +44,7 @@ export default class DashboardController {
       // =======================================================================
       // 'tareasPendientes' es un array vacío, ya que no depende de un usuario logueado.
       // =======================================================================
-      const tareasPendientes: Ticket[] = [] 
-
+      const tareasPendientes: Ticket[] = []
 
       return response.ok({
         metrics: {
@@ -54,7 +52,7 @@ export default class DashboardController {
           ticketsCerradosMes: totalTicketsCerradosMes,
           nuevosUsuarios: totalNuevosUsuarios,
         },
-        actividadReciente: actividadReciente.map(ticket => ({
+        actividadReciente: actividadReciente.map((ticket) => ({
           id: ticket.id,
           titulo: ticket.titulo,
           estado: ticket.estado?.nombre,
@@ -64,7 +62,7 @@ export default class DashboardController {
           fecha: ticket.createdAt.toRelative(),
         })),
         // Si 'tareasPendientes' es un array vacío, este map simplemente devolverá un array vacío, lo cual es correcto.
-        tareasPendientes: tareasPendientes.map(ticket => ({
+        tareasPendientes: tareasPendientes.map((ticket) => ({
           id: ticket.id,
           titulo: ticket.titulo,
           prioridad: ticket.prioridad?.nombre,

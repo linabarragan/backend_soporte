@@ -3,7 +3,6 @@
 import router from '@adonisjs/core/services/router'
 import hash from '@adonisjs/core/services/hash'
 
-
 // ==============================================================================
 // IMPORTACIONES DE CONTROLADORES
 // ==============================================================================
@@ -59,9 +58,7 @@ router
 router
   .group(() => {
     // Dashboard (protegido por middleware)
-    router
-      .get('/dashboard', [() => import('#controllers/dashboard_controller'), 'index'])
-      
+    router.get('/dashboard', [() => import('#controllers/dashboard_controller'), 'index'])
 
     router
       .group(() => {
@@ -77,6 +74,7 @@ router
     router
       .group(() => {
         router.get('/', [TicketsController, 'index'])
+        router.get('/:id/attachment', [TicketsController, 'downloadAttachment'])
         router.get('/:id', [TicketsController, 'show'])
         router.post('/', [TicketsController, 'store'])
         router.patch('/:id', [TicketsController, 'update'])
@@ -151,5 +149,3 @@ router
   })
   .prefix('/api') // ¡Este grupo principal para /api, sin middleware aquí si quieres todas las rutas internas abiertas!
 // .middleware([middleware.auth({ guards: ['api'] })]) // COMENTAR O ELIMINAR si NO QUIERES middleware para todo el grupo /api
-
- 
