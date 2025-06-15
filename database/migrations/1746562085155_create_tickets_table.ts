@@ -58,6 +58,7 @@ export default class extends BaseSchema {
         .notNullable() // El creador siempre debe existir
       table.string('nombre_archivo', 255).nullable() // <--- Asegúrate de que sea nullable
       table.dateTime('fecha_asignacion').nullable() // <--- Asegúrate de que sea nullable
+      table.dateTime('fecha_finalizacion').nullable()
       table.timestamp('created_at')
       table.timestamp('updated_at')
     })
@@ -66,6 +67,7 @@ export default class extends BaseSchema {
   async down() {
     this.schema.alterTable(this.tableName, (table) => {
       table.dropColumn('nombre_archivo')
+      table.dropColumn('fecha_finalizacion')
     })
   }
 }

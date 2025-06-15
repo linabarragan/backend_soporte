@@ -19,6 +19,9 @@ import ItemsController from '#controllers/ItemsController' // Asumiendo archivo:
 import RolePermissionItemController from '#controllers/roles_permisos_items_controller'
 import EmpresasController from '#controllers/empresas_controller' // Asumiendo que tienes este controlador
 import ProyectosController from '#controllers/proyectos_controller' // Asumiendo que tienes este controlador
+import ComentarioController from '#controllers/comentarios_controller' // Asumiendo que tienes este controlador
+import HistorialEstadosTicketsController from '#controllers/historial_estados_tickets_controller'
+import NotificacionesController from '#controllers/notificacions_controller'
 // ==============================================================================
 // RUTAS SIN AUTENTICACIÓN / GLOBALES
 // ==============================================================================
@@ -74,6 +77,9 @@ router
     router
       .group(() => {
         router.get('/', [TicketsController, 'index'])
+        router.post('/:id/comentarios', [ComentarioController, 'store'])
+        router.get('/:id/trazabilidad', [HistorialEstadosTicketsController, 'porTicket'])
+        router.get('/historial', [TicketsController, 'historial'])
         router.get('/:id/attachment', [TicketsController, 'downloadAttachment'])
         router.get('/:id', [TicketsController, 'show'])
         router.post('/', [TicketsController, 'store'])
@@ -82,6 +88,12 @@ router
       })
       .prefix('/tickets') // -> /api/tickets
     // Rutas para Entidades Maestras (Lectura - si necesitan CRUD, moverlas a sus propios grupos)
+    router
+      .group(() => {
+        router.get('/', [NotificacionesController, 'index'])
+        router.put('/:id/leida', [NotificacionesController, 'marcarComoLeida'])
+      })
+      .prefix('/notificaciones')
 
     router.get('/estados', [EstadosTicketsController, 'index']) // -> /api/estados
     router.get('/prioridades', [PrioridadesController, 'index']) // -> /api/prioridades

@@ -1,6 +1,8 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
+import { BaseModel, column, belongsTo, hasMany } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import type { HasMany } from '@adonisjs/lucid/types/relations'
+import Comentario from '../models/comentarios_tickets.js'
 import Usuario from '../models/usuarios.js'
 import Categoria from '../models/categorias.js'
 import Servicio from '../models/servicios.js'
@@ -45,6 +47,9 @@ export default class Ticket extends BaseModel {
   @column.dateTime({ autoCreate: true })
   declare fechaAsignacion: DateTime | null
 
+  @column.dateTime()
+  declare fechaFinalizacion: DateTime | null
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
@@ -71,4 +76,7 @@ export default class Ticket extends BaseModel {
 
   @belongsTo(() => Empresa, { foreignKey: 'empresasId' })
   declare empresa: BelongsTo<typeof Empresa>
+
+  @hasMany(() => Comentario)
+  declare comentarios: HasMany<typeof Comentario>
 }

@@ -34,7 +34,7 @@ export default class HistorialEstadosTicket extends BaseModel {
   @belongsTo(() => Ticket)
   declare ticket: BelongsTo<typeof Ticket>
 
-  @belongsTo(() => EstadoTicket)
+  @belongsTo(() => EstadoTicket, { foreignKey: 'estadoId' }) // ✅ CORREGIDO
   declare estado: BelongsTo<typeof EstadoTicket>
 
   @belongsTo(() => Usuario)

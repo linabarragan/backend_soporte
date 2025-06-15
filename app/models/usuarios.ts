@@ -28,8 +28,8 @@ export default class Usuario extends compose(BaseModel, AuthFinder) {
   @column()
   declare correo: string
 
-  @column()
-  declare password: string
+  @column({ serializeAs: null }) // 👈 Oculta este campo en la API
+  declare password: string
 
   // ¡NUEVA COLUMNA PARA EL ID DEL ROL!
   // Asume que la columna en la base de datos se llama 'rol_id'.
