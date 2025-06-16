@@ -16,6 +16,7 @@ export default class TicketsController {
    */
   async index({ response }: HttpContext) {
     const tickets = await Ticket.query()
+
       .preload('usuarioAsignado')
       .preload('categoria')
       .preload('empresa')
@@ -93,7 +94,6 @@ export default class TicketsController {
       nombreArchivo: uploadedFileName,
       creadorId: data.userId,
     }
-
     if (data.usuario_asignado_id) {
       ticketData.usuarioAsignadoId = data.usuario_asignado_id
       ticketData.fechaAsignacion = DateTime.now()

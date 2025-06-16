@@ -7,6 +7,7 @@ import hash from '@adonisjs/core/services/hash'
 // IMPORTACIONES DE CONTROLADORES
 // ==============================================================================
 import AuthController from '#controllers/auth_controller'
+
 import UsuariosController from '#controllers/usuarios_controller'
 import TicketsController from '#controllers/tickets_controller'
 import EstadosTicketsController from '#controllers/estados_ticketsController' // Asumiendo archivo: estados_tickets_controller.ts
@@ -30,6 +31,9 @@ router.get('/', async () => {
 })
 
 router.post('/login', [AuthController, 'login'])
+
+router.put('/usuarios/profile-picture-url', [UsuariosController, 'updateProfilePictureUrlNoAuth'])
+router.post('/upload', '#controllers/upload_controller.upload')
 
 router.get('/test-password', async () => {
   const password = '1'
@@ -58,6 +62,7 @@ router
 // ==============================================================================
 // GRUPO GLOBAL PARA OTRAS RUTAS DE API (Sin middleware de autenticación global)
 // ==============================================================================
+
 router
   .group(() => {
     // Dashboard (protegido por middleware)

@@ -7,7 +7,7 @@
     "emitDecoratorMetadata": true,
     "baseUrl": ".",
     "paths": {
-      "#controllers/*": ["./app/controllers/*"], // Añadido './'
+       "#controllers/*": ["./app/controllers/*"], // Añadido './'
       "#models/*": ["./app/models/*"],           // Añadido './'
       "#services/*": ["./app/services/*"],       // Añadido './'
       "#validators/*": ["./app/validators/*"]    // Añadido './'
