@@ -9,7 +9,7 @@ export default class AuthController {
     try {
       const user = await Usuario.query()
         .where('correo', correo)
-        .preload('role') // <--- CARGA la relación aquí
+        .preload('rol') // <--- CARGA la relación aquí
         .first()
 
       if (!user) {
