@@ -213,7 +213,7 @@ export default class TicketsController {
       const estadoAnterior = await EstadoTicket.find(estadoAnteriorId)
       const estadoNuevo = await EstadoTicket.find(restoData.estado_id)
 
-      const comentarioTexto = `Cambio de estado: ${estadoAnterior?.nombre || estadoAnteriorId} → ${estadoNuevo?.nombre || restoData.estado_id}`
+      const comentarioTexto = `Cambio de estado: ${estadoAnterior?.nombre || estadoAnteriorId} -> ${estadoNuevo?.nombre || restoData.estado_id}`
 
       await HistorialEstadosTicket.create({
         ticketId: ticket.id,
@@ -314,7 +314,7 @@ export default class TicketsController {
         .preload('prioridad')
         .preload('creador')
         .preload('comentarios', (comentarioQuery) => comentarioQuery.preload('usuario'))
-        .orderBy('created_at', 'desc')
+        .orderBy('id', 'desc')
 
       if (estadoId) query.where('estado_id', estadoId)
       if (creadorId) query.where('creador_id', creadorId)
