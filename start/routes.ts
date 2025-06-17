@@ -31,6 +31,9 @@ router.post('/login', [AuthController, 'login'])
 router.put('/usuarios/profile-picture-url', [UsuariosController, 'updateProfilePictureUrlNoAuth'])
 router.post('/upload', '#controllers/upload_controller.upload')
 
+router.post('/forgot-password', [AuthController, 'forgotPassword'])
+router.post('/reset-password', [AuthController, 'resetPassword'])
+
 router.get('/test-password', async () => {
   const password = '1'
   const hashed = '$scrypt$n=16384,r=8,p=1$KCOc6mHQZHdIAvH4Z5Fh0A$MA72/3CwHAzLvsoBFb/X03/85V+DjeRT0S65UcLg+tKizrNEgeViEALBbsnOh/teGTIzXv88lNFuPqRZfI1KkA'
