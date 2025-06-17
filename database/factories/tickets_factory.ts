@@ -11,7 +11,8 @@ import Empresa from '#models/empresas'
 
 export const TicketFactory = factory
   .define(Ticket, async () => {
-    const usuario = await Usuario.query().select('id').orderByRaw('RAND()').firstOrFail()
+    const creador = await Usuario.query().select('id').orderByRaw('RAND()').firstOrFail()
+    const usuarioAsignado = await Usuario.query().select('id').orderByRaw('RAND()').firstOrFail()
     const categoria = await Categoria.query().select('id').orderByRaw('RAND()').firstOrFail()
     const empresa = await Empresa.query().select('id').orderByRaw('RAND()').firstOrFail() // Asumiendo que 'empresa' es un usuario
     const servicio = await Servicio.query().select('id').orderByRaw('RAND()').firstOrFail()
@@ -23,10 +24,11 @@ export const TicketFactory = factory
       descripcion: faker.lorem.paragraph(),
       estadoId: estado.id,
       prioridadId: prioridad.id,
-      usuarioAsignadoId: usuario.id,
+      usuarioAsignadoId: usuarioAsignado.id,
       categoriaId: categoria.id,
       empresasId: empresa.id,
       servicioId: servicio.id,
+      creadorId: creador.id,
       fechaAsignacion: DateTime.fromJSDate(faker.date.recent()), // ✅ FIX aquí
     }
   })

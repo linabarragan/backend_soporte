@@ -13,19 +13,26 @@ export default class extends BaseSchema {
       table.string('foto_perfil', 255).nullable()
       table.string('password', 180).notNullable()
 
-      // ===========================================
-      // ¡AQUÍ ES DONDE NECESITAS AÑADIR LA COLUMNA rol_id!
-      // ===========================================
+      // Columna para la relación con Roles
       table
-        .integer('rol_id') // Define la columna como un entero
-        .unsigned() // Asegura que sea un entero sin signo (para IDs positivos)
-        .references('id') // Referencia la columna 'id'
-        .inTable('roles') // De la tabla 'roles'
-        .onDelete('SET NULL') // Si un rol es eliminado, establece rol_id en NULL en usuarios
-        .nullable() // Permite que un usuario pueda existir sin un rol asignado inicialmente
+        .integer('rol_id')
+        .unsigned()
+        .references('id')
+        .inTable('roles')
+        .onDelete('SET NULL')
+        .nullable()
 
-      table.timestamp('created_at', { useTz: true }).notNullable() // Con useTz para consistencia
-      table.timestamp('updated_at', { useTz: true }).notNullable() // Con useTz para consistencia
+      // Columna para la relación con Empresas (¡NUEVA ADICIÓN!)
+      table
+        .integer('empresa_id') // Nombre de la columna para la clave foránea
+        .unsigned() // Asegura que sea un entero sin signo
+        .references('id') // Referencia la columna 'id'
+        .inTable('empresas') // De la tabla 'empresas'
+        .onDelete('SET NULL') // Comportamiento al borrar una empresa: pone el valor a NULL
+        .nullable() // Permite que un usuario no tenga una empresa asignada
+
+      table.timestamp('created_at', { useTz: true }).notNullable()
+      table.timestamp('updated_at', { useTz: true }).notNullable()
     })
   }
 

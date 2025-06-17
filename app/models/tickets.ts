@@ -1,6 +1,8 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
+import { BaseModel, column, belongsTo, hasMany } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import type { HasMany } from '@adonisjs/lucid/types/relations'
+import Comentario from '../models/comentarios_tickets.js'
 import Usuario from '../models/usuarios.js'
 import Categoria from '../models/categorias.js'
 import Servicio from '../models/servicios.js'
@@ -36,8 +38,17 @@ export default class Ticket extends BaseModel {
   @column()
   declare servicioId: number
 
+  @column()
+  declare creadorId: number // La columna en la DB es 'creador_id'
+
+  @column()
+  declare nombreArchivo: string | null // Para almacenar el nombre del archivo adjunto
+
   @column.dateTime({ autoCreate: true })
   declare fechaAsignacion: DateTime | null
+
+  @column.dateTime()
+  declare fechaFinalizacion: DateTime | null
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -47,6 +58,9 @@ export default class Ticket extends BaseModel {
 
   @belongsTo(() => Usuario, { foreignKey: 'usuarioAsignadoId' })
   declare usuarioAsignado: BelongsTo<typeof Usuario>
+
+  @belongsTo(() => Usuario, { foreignKey: 'creadorId' }) // Usa 'creadorId' para la clave foránea
+  declare creador: BelongsTo<typeof Usuario> // Nombre de la relación para acceder al usuario creador
 
   @belongsTo(() => Categoria)
   declare categoria: BelongsTo<typeof Categoria>
@@ -62,4 +76,7 @@ export default class Ticket extends BaseModel {
 
   @belongsTo(() => Empresa, { foreignKey: 'empresasId' })
   declare empresa: BelongsTo<typeof Empresa>
+
+  @hasMany(() => Comentario)
+  declare comentarios: HasMany<typeof Comentario>
 }

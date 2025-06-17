@@ -1,14 +1,17 @@
-// app/Controllers/Http/UsersController.ts
 import type { HttpContext } from '@adonisjs/core/http'
-import Usuario from '#models/usuarios' // Verifica que el modelo se llame correctamente
+import Usuario from '#models/usuarios'
+import Empresa from '#models/empresas'
+import Rol from '#models/roles'
+import { usuarioValidator } from '#validators/usuario'
 
-export default class UsersController {
-  /**
-   * Muestra una lista de todos los usuarios con sus roles asociados.
-   */
+export default class UsuariosController {
   public async index({ response }: HttpContext) {
     try {
-      const users = await Usuario.query().preload('role')
+      const users = await Usuario.query()
+        .preload('rol')
+        .preload('empresa')
+        .orderBy('id', 'asc')
+
       return response.ok(users)
     } catch (error) {
       console.error('Error al obtener usuarios:', error)
@@ -19,34 +22,35 @@ export default class UsersController {
     }
   }
 
-  /**
-   * Crea un nuevo usuario.
-   */
-  public async store({ request, response }: HttpContext) {
-    const { nombre, apellido, telefono, correo, password, rolId } = request.only([
-      'nombre',
-      'apellido',
-      'telefono',
-      'correo',
-      'password',
-      'rolId',
-    ])
+  public async show({ params, response }: HttpContext) {
+    try {
+      const usuario = await Usuario.query()
+        .where('id', params.id)
+        .preload('rol')
+        .preload('empresa')
+        .firstOrFail()
 
-    if (!password) {
-      return response.badRequest({ message: 'La contraseña es requerida.' })
+      return response.ok(usuario)
+    } catch (error) {
+      console.error('Error al obtener usuario por ID:', error)
+      if (error.code === 'E_ROW_NOT_FOUND') {
+        return response.notFound({ message: 'El usuario solicitado no fue encontrado.' })
+      }
+      return response.internalServerError({
+        message: 'Ocurrió un error al obtener el usuario.',
+        error: error.message,
+      })
     }
+  }
+
+  public async store({ request, response }: HttpContext) {
+    const payload = await request.validateUsing(usuarioValidator.crear)
 
     try {
-      const user = await Usuario.create({
-        nombre,
-        apellido,
-        telefono,
-        correo,
-        password,
-        rolId,
-      })
+      const user = await Usuario.create(payload)
 
-      await user.load('role')
+      await user.load('rol')
+      await user.load('empresa')
 
       return response.created(user)
     } catch (error) {
@@ -58,39 +62,23 @@ export default class UsersController {
     }
   }
 
-  /**
-   * Actualiza un usuario existente por ID.
-   */
   public async update({ params, request, response }: HttpContext) {
-    const user = await Usuario.find(params.id)
-
-    if (!user) {
-      return response.notFound({ message: 'Usuario no encontrado' })
-    }
-
-    const { nombre, apellido, telefono, correo, password, rolId } = request.only([
-      'nombre',
-      'apellido',
-      'telefono',
-      'correo',
-      'password',
-      'rolId',
-    ])
+    const user = await Usuario.findOrFail(params.id)
+    const payload = await request.validateUsing(usuarioValidator.actualizar)
 
     try {
-      user.nombre = nombre ?? user.nombre
-      user.apellido = apellido ?? user.apellido
-      user.telefono = telefono ?? user.telefono
-      user.correo = correo ?? user.correo
-      user.rolId = rolId ?? user.rolId
-      user.password = password ?? user.password
-
+      user.merge(payload)
       await user.save()
-      await user.load('role')
+
+      await user.load('rol')
+      await user.load('empresa')
 
       return response.ok(user)
     } catch (error) {
       console.error('Error al actualizar usuario:', error)
+      if (error.code === 'E_ROW_NOT_FOUND') {
+        return response.notFound({ message: 'Usuario no encontrado para actualizar' })
+      }
       return response.internalServerError({
         message: 'Error al actualizar usuario',
         error: error.message,
@@ -98,9 +86,6 @@ export default class UsersController {
     }
   }
 
-  /**
-   * Elimina un usuario por ID.
-   */
   public async destroy({ params, response }: HttpContext) {
     try {
       const user = await Usuario.findOrFail(params.id)
@@ -119,9 +104,6 @@ export default class UsersController {
     }
   }
 
-  /**
-   * Actualiza la URL de la foto de perfil sin autenticación.
-   */
   public async updateProfilePictureUrlNoAuth({ request, response }: HttpContext) {
     const { userId, url } = request.only(['userId', 'url'])
 
@@ -142,5 +124,61 @@ export default class UsersController {
       message: 'Foto de perfil actualizada con éxito (sin auth)',
       foto_perfil: user.foto_perfil,
     })
+  }
+
+  /**
+   * GET /api/usuarios/tecnicos-lista
+   */
+  public async getTecnicos({ response }: HttpContext) {
+    try {
+      const tecnicos = await Usuario.query()
+        .select('id', 'nombre', 'apellido', 'rol_id') // Incluimos rol_id para evitar error de preload
+        .preload('rol')
+        .whereHas('rol', (query) => {
+          query.where('nombre', 'Técnico de soporte')
+        })
+        .orderBy('nombre', 'asc')
+
+      const resultado = tecnicos.map((t) => ({
+        id: t.id,
+        nombreCompleto: `${t.nombre} ${t.apellido}`,
+      }))
+
+      console.log('*** USUARIOS CONTROLLER - Técnicos encontrados:', resultado)
+
+      return response.ok(resultado)
+    } catch (error) {
+      console.error('*** ERROR USUARIOS CONTROLLER - al obtener la lista de técnicos:', error.message)
+      return response.internalServerError({
+        message: 'Ocurrió un error al obtener la lista de técnicos.',
+        error: error.message,
+      })
+    }
+  }
+
+  public async getEmpresas({ response }: HttpContext) {
+    try {
+      const empresas = await Empresa.query().orderBy('nombre', 'asc')
+      return response.ok(empresas)
+    } catch (error) {
+      console.error('Error al obtener empresas:', error)
+      return response.internalServerError({
+        message: 'Ocurrió un error al obtener la lista de empresas.',
+        error: error.message,
+      })
+    }
+  }
+
+  public async getRoles({ response }: HttpContext) {
+    try {
+      const roles = await Rol.query().orderBy('nombre', 'asc')
+      return response.ok(roles)
+    } catch (error) {
+      console.error('Error al obtener roles:', error)
+      return response.internalServerError({
+        message: 'Ocurrió un error al obtener la lista de roles.',
+        error: error.message,
+      })
+    }
   }
 }
