@@ -1,9 +1,6 @@
 // app/Controllers/Http/EmpresasController.ts
 import type { HttpContext } from '@adonisjs/core/http'
 import Empresa from '#models/empresas' // Asegúrate de que el path sea correcto (Empresa o empresas)
-// No necesitas importar Proyecto aquí si ya está precargado en el modelo Empresa
-// y solo necesitas el conteo de proyectos.
-// Si necesitas acceder a propiedades específicas de Proyecto, sí deberías importarlo.
 
 export default class EmpresasController {
   // Obtener todas las empresas (filtradas por estado, opcionalmente)
@@ -100,6 +97,39 @@ export default class EmpresasController {
     } catch (error) {
       console.error(error)
       return response.status(500).json({ mensaje: 'Error al eliminar empresa permanentemente' })
+    }
+  }
+
+  /**
+   * Verifica si un nombre de empresa ya existe en la base de datos.
+   * Usado para validación de unicidad en el frontend.
+   */
+  public async checkUniqueName({ request, response }: HttpContext) {
+    try {
+      const name = request.input('name') // Obtiene el parámetro 'name' de la query string o body
+
+      if (!name) {
+        return response.badRequest({ message: 'El nombre es requerido para la verificación.' })
+      }
+
+      // --- ¡CORRECCIÓN APLICADA AQUÍ PARA COMPATIBILIDAD CON MYSQL! ---
+      // Usamos LOWER() en la columna y en el valor de entrada para una comparación
+      // insensible a mayúsculas y minúsculas compatible con MySQL.
+      const empresa = await Empresa.query()
+        .whereRaw('LOWER(nombre) = ?', [name.toLowerCase()])
+        .first()
+
+      // Si 'empresa' es nulo, significa que el nombre es único
+      if (empresa) {
+        // El nombre ya existe
+        return response.conflict({ isUnique: false, message: 'El nombre de empresa ya está en uso.' })
+      } else {
+        // El nombre es único
+        return response.ok({ isUnique: true, message: 'El nombre de empresa está disponible.' })
+      }
+    } catch (error) {
+      console.error('Error en checkUniqueName:', error)
+      return response.status(500).json({ isUnique: false, message: 'Error interno del servidor al verificar el nombre.' })
     }
   }
 }

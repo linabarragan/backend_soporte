@@ -37,7 +37,7 @@ router.post('/reset-password', [AuthController, 'resetPassword'])
 
 router.get('/test-password', async () => {
   const password = '1'
-  const hashed = '$scrypt$n=16384,r=8,p=1$KCOc6mHQZHdIAvH4Z5Fh0A$MA72/3CwHAzLvsoBFb/X03/85V+DjeRT0S65UcLg+tKizrNEgeViEALBbsnOh/teGTIzXv88lNFuPqRZfI1KkA'
+  const hashed = '$scrypt$n=16384,r=8,p=1$KCOc6mHQZHdIAvH4Z5F0A$MA72/3CwHAzLvsoBFb/X03/85V+DjeRT0S65UcLg+tKizrNEgeViEALBbsnOh/teGTIzXv88lNFuPqRZfI1KkA'
   const result = await hash.verify(hashed, password)
   return { result }
 })
@@ -102,6 +102,8 @@ router
     // puedes redefinirla para que haga un soft delete si es necesario:
     // router.delete('roles/:id', [RolesController, 'inactivate'])
 
+    // --- AÑADIENDO LA RUTA DE UNICIDAD PARA ROLES ---
+    router.get('roles/check-unique-name', [RolesController, 'checkUniqueName']) // <--- ¡Esta es la línea clave!
 
     // === RUTAS DE PERMISOS ===
     router.resource('permisos', PermisosController).apiOnly()
@@ -121,11 +123,15 @@ router
     router.patch('empresas/:id/inactivar', [EmpresasController, 'inactivate'])
     router.patch('empresas/:id/activar', [EmpresasController, 'activate'])
     router.delete('empresas/:id/permanente', [EmpresasController, 'destroyPermanently'])
+    // **NUEVA RUTA para verificar unicidad del nombre de empresa**
+    router.get('empresas/check-unique-name', [EmpresasController, 'checkUniqueName'])
 
 
     // === RUTAS DE PROYECTOS ===
     router.resource('proyectos', ProyectosController).apiOnly()
       .where('id', router.matchers.number())
+    // --- AÑADIENDO LA RUTA DE UNICIDAD PARA PROYECTOS ---
+    router.get('proyectos/check-unique-name', [ProyectosController, 'checkUniqueName']) // <--- ¡Nueva ruta para Proyectos!
 
 
     // === RUTAS DE ASIGNACIONES (roles_permisos_items) ===
@@ -137,11 +143,8 @@ router
       RolePermissionItemController,
       'eliminarPorRolItem',
     ])
-    router.delete('/asignaciones/:id', [RolePermissionItemController, 'destroy']) // Si tienes un ID primario simple para eliminar
+    router.delete('/asignaciones/:id', [RolePermissionItemController, 'destroy'])
 
 
   })
   .prefix('/api')
-
-// Si deseas autenticar, puedes descomentar el middleware
-// .middleware([middleware.auth({ guards: ['api'] })])

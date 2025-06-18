@@ -2,8 +2,6 @@
 
 import type { HttpContext } from '@adonisjs/core/http'
 import Rol from '#models/roles'
-import { rolValidator } from '#validators/roles' // ¡Importamos nuestro validador de roles!
-import { errors } from '@vinejs/vine' // 🚀 IMPORTANTE: Importa 'errors' de @vinejs/vine
 
 export default class RolesController {
   /**
@@ -54,24 +52,29 @@ export default class RolesController {
    */
   async store({ request, response }: HttpContext) {
     try {
-      // Se valida la solicitud usando el esquema 'crear' del validador de roles.
-      const payload = await request.validateUsing(rolValidator.crear)
+      const { nombre } = request.only(['nombre']); // Solo obtenemos el nombre para la validación manual
 
-      // Se crea el rol con los datos validados y el estado por defecto 'activo'.
-      const rol = await Rol.create({ ...payload, estado: 'activo' })
-
-      return response.created(rol)
-    } catch (error) {
-      console.error('Error al crear rol:', error)
-
-      // 🚀 CORRECCIÓN APLICADA AQUÍ: Manejo específico de ValidationError
-      if (error instanceof errors.E_VALIDATION_ERROR) {
-        // Si el error es de validación (como el nombre duplicado), devolvemos 422
-        return response.unprocessableEntity(error.messages) // 'error.messages' contiene el array de errores
+      // --- Verificación de unicidad del nombre (manual) ---
+      if (!nombre) {
+        return response.badRequest({ message: 'El nombre del rol es requerido.' });
       }
 
-      // Para cualquier otro error (no de validación), devolvemos un 500
-      return response.internalServerError({ message: 'No se pudo crear el rol debido a un error interno del servidor.' })
+      const existingRol = await Rol.query().whereRaw('LOWER(nombre) = ?', [nombre.toLowerCase()]).first();
+      if (existingRol) {
+        return response.conflict({ message: 'El nombre del rol ya está en uso.' });
+      }
+      // --- Fin de verificación de unicidad ---
+
+      // Asumimos que los otros campos se manejan y se validan en el frontend o con otras reglas simples
+      const datos = request.only(['nombre', 'estado']); // Puedes expandir esto si hay más campos
+      
+      // Asegurarse de que el estado por defecto sea 'activo' al crear si no se envía
+      const rol = await Rol.create({ ...datos, estado: datos.estado || 'activo' });
+
+      return response.created(rol);
+    } catch (error) {
+      console.error('Error al crear rol:', error);
+      return response.internalServerError({ message: 'No se pudo crear el rol debido a un error interno del servidor.' });
     }
   }
 
@@ -82,35 +85,31 @@ export default class RolesController {
   async update({ params, request, response }: HttpContext) {
     try {
       const rol = await Rol.findOrFail(params.id)
+      const { nombre, estado } = request.only(['nombre', 'estado']) // Obtener los campos a actualizar
 
-      // Se valida la solicitud usando el esquema 'actualizar' del validador de roles.
-      // Pasamos el ID del rol actual en 'meta' para que la validación de unicidad de 'nombre'
-      // pueda excluir el propio rol de la comprobación.
-      const payload = await request.validateUsing(rolValidator.actualizar, {
-        meta: {
-          rolId: rol.id // Este ID es usado por la regla 'unique' en el validador.
+      // --- Verificación de unicidad del nombre (manual para actualización) ---
+      if (nombre && nombre.toLowerCase() !== rol.nombre.toLowerCase()) { // Solo verificar si el nombre cambió
+        const existingRol = await Rol.query()
+          .whereRaw('LOWER(nombre) = ?', [nombre.toLowerCase()])
+          .whereNot('id', rol.id) // Excluir el propio rol de la verificación
+          .first()
+        if (existingRol) {
+          return response.conflict({ message: 'El nombre del rol ya está en uso.' });
         }
-      })
-
-      rol.merge(payload)
-      await rol.save()
-
-      return response.ok(rol)
-    } catch (error) {
-      console.error(`Error al actualizar rol con ID ${params.id}:`, error)
-
-      // 🚀 CORRECCIÓN APLICADA AQUÍ: Manejo específico de ValidationError
-      if (error instanceof errors.E_VALIDATION_ERROR) {
-        // Si el error es de validación (como el nombre duplicado), devolvemos 422
-        return response.unprocessableEntity(error.messages) // 'error.messages' contiene el array de errores
       }
+      // --- Fin de verificación de unicidad ---
 
+      // Fusionar los datos recibidos (nombre y estado, u otros campos que tengas)
+      rol.merge({ nombre, estado }); // Solo actualiza los campos que te pasen
+      await rol.save();
+
+      return response.ok(rol);
+    } catch (error) {
+      console.error(`Error al actualizar rol con ID ${params.id}:`, error);
       if (error.code === 'E_ROW_NOT_FOUND') {
         return response.notFound({ message: 'Rol no encontrado para actualizar.' });
       }
-
-      // Para cualquier otro error (no de validación), devolvemos un 500
-      return response.internalServerError({ message: 'No se pudo actualizar el rol debido a un error interno del servidor.' })
+      return response.internalServerError({ message: 'No se pudo actualizar el rol debido a un error interno del servidor.' });
     }
   }
 
@@ -171,18 +170,6 @@ export default class RolesController {
   async forceDestroy({ params, response }: HttpContext) {
     try {
       const rol = await Rol.findOrFail(params.id)
-      // Opcional: Descomenta si necesitas lógica para evitar eliminar roles
-      // asociados a usuarios u otras entidades para mantener la integridad referencial.
-      /*
-      import Usuario from '#models/usuarios' // Asegúrate de importar el modelo Usuario si lo necesitas.
-      const usuariosAsociados = await Usuario.query().where('rol_id', rol.id).first();
-      if (usuariosAsociados) {
-          return response.forbidden({
-            message: 'No se puede eliminar el rol permanentemente porque está asociado a usuarios.'
-          });
-      }
-      */
-
       await rol.delete() // ¡Elimina el registro de la DB de forma permanente!
 
       return response.noContent() // 204 No Content para eliminación exitosa sin contenido de respuesta.
@@ -192,6 +179,42 @@ export default class RolesController {
         return response.notFound({ message: 'Rol no encontrado para eliminar.' });
       }
       return response.internalServerError({ message: 'No se pudo eliminar el rol permanentemente.' })
+    }
+  }
+
+  /**
+   * Verifica si un nombre de rol ya existe en la base de datos.
+   * Usado para validación de unicidad en el frontend.
+   */
+  public async checkUniqueName({ request, response }: HttpContext) {
+    try {
+      const name = request.input('name') // Obtiene el parámetro 'name' de la query string o body
+      const excludeId = request.input('excludeId') // Opcional: ID del rol actual si estamos editando
+
+      if (!name) {
+        return response.badRequest({ message: 'El nombre es requerido para la verificación.' })
+      }
+
+      let query = Rol.query().whereRaw('LOWER(nombre) = ?', [name.toLowerCase()])
+
+      // Si se proporciona un ID a excluir (para el caso de edición)
+      if (excludeId) {
+        query = query.whereNot('id', excludeId)
+      }
+
+      const rol = await query.first()
+
+      // Si 'rol' es nulo, significa que el nombre es único
+      if (rol) {
+        // El nombre ya existe
+        return response.conflict({ isUnique: false, message: 'El nombre de rol ya está en uso.' })
+      } else {
+        // El nombre es único
+        return response.ok({ isUnique: true, message: 'El nombre de rol está disponible.' })
+      }
+    } catch (error) {
+      console.error('Error en checkUniqueName (Roles):', error)
+      return response.internalServerError({ isUnique: false, message: 'Error interno del servidor al verificar el nombre del rol.' })
     }
   }
 }
