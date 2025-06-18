@@ -2,13 +2,13 @@ import type { HttpContext } from '@adonisjs/core/http'
 import Ticket from '#models/tickets'
 import HistorialEstadosTicket from '#models/historial_estado_tickets'
 import EstadoTicket from '#models/estados_ticket'
-import EstadoNotificacion from '#models/estados_notificacion'; // ¡Importante! Asegúrate de tener este modelo
+import EstadoNotificacion from '#models/estados_notificacion';
 import NotificacionesController from './notificacions_controller.js'
 import app from '@adonisjs/core/services/app'
 import { cuid } from '@adonisjs/core/helpers'
 import { DateTime } from 'luxon'
 import { existsSync } from 'node:fs'
-import { rm } from 'node:fs/promises' // Para eliminar archivos de forma asíncrona
+import { rm } from 'node:fs/promises'
 
 // Importa tus validaciones de VineJS
 import { ticketValidator } from '#validators/tickets'
@@ -27,7 +27,18 @@ export default class TicketsController {
       .preload('prioridad')
       .preload('creador')
       .orderBy('id', 'desc')
-    return response.ok(tickets)
+
+    const formattedTickets = tickets.map(ticket => {
+      const ticketJson = ticket.toJSON()
+      if (ticketJson.usuarioAsignado) {
+        ticketJson.usuarioAsignado.nombreCompleto = `${ticketJson.usuarioAsignado.nombre} ${ticketJson.usuarioAsignado.apellido}`
+      }
+      if (ticketJson.creador) {
+        ticketJson.creador.nombreCompleto = `${ticketJson.creador.nombre} ${ticketJson.creador.apellido}`
+      }
+      return ticketJson
+    })
+    return response.ok(formattedTickets)
   }
 
   /**
@@ -44,7 +55,15 @@ export default class TicketsController {
       .preload('prioridad')
       .preload('creador')
       .firstOrFail()
-    return response.ok(ticket)
+
+    const ticketJson = ticket.toJSON()
+    if (ticketJson.usuarioAsignado) {
+      ticketJson.usuarioAsignado.nombreCompleto = `${ticketJson.usuarioAsignado.nombre} ${ticketJson.usuarioAsignado.apellido}`
+    }
+    if (ticketJson.creador) {
+      ticketJson.creador.nombreCompleto = `${ticketJson.creador.nombre} ${ticketJson.creador.apellido}`
+    }
+    return response.ok(ticketJson)
   }
 
   /**
@@ -104,7 +123,14 @@ export default class TicketsController {
       await ticket.load('prioridad')
       await ticket.load('creador')
 
-      return response.created(ticket)
+      const ticketJson = ticket.toJSON()
+      if (ticketJson.usuarioAsignado) {
+        ticketJson.usuarioAsignado.nombreCompleto = `${ticketJson.usuarioAsignado.nombre} ${ticketJson.usuarioAsignado.apellido}`
+      }
+      if (ticketJson.creador) {
+        ticketJson.creador.nombreCompleto = `${ticketJson.creador.nombre} ${ticketJson.creador.apellido}`
+      }
+      return response.created(ticketJson)
     } catch (error) {
       if (error.status === 422) {
         console.error('Errores de validación de VineJS en store:', error.messages);
@@ -127,22 +153,13 @@ export default class TicketsController {
     try {
       const payload = await request.validateUsing(ticketValidator.actualizar)
 
-      // --- CONSOLE.LOG DEPURACIÓN ---
-      console.log('--- PAYLOAD RECIBIDO Y VALIDADO EN TicketsController.update ---')
-      console.log(payload)
-      console.log('--------------------------------------------------------------')
-      // --- FIN CONSOLE.LOG DEPURACIÓN ---
-
-      const estadoAnteriorId = ticket.estadoId
-      const usuarioQueActualizaId = payload.usuario_id
-
       // 1. Lógica para manejar el archivo adjunto (eliminación o carga de nuevo)
       if (payload.clear_adjunto) {
         if (ticket.nombreArchivo) {
           const filePath = app.publicPath(`uploads/tickets/${ticket.nombreArchivo}`)
           if (existsSync(filePath)) {
             try {
-              await rm(filePath) // Usando await rm()
+              await rm(filePath)
               ticket.nombreArchivo = null
               console.log(`Archivo ${filePath} eliminado exitosamente.`)
             } catch (err: any) {
@@ -152,7 +169,6 @@ export default class TicketsController {
           }
         }
       } else if (payload.archivo_adjunto) {
-        // Si se envió un nuevo archivo, eliminar el anterior si existe
         if (ticket.nombreArchivo) {
           const oldFilePath = app.publicPath(`uploads/tickets/${ticket.nombreArchivo}`)
           if (existsSync(oldFilePath)) {
@@ -195,6 +211,9 @@ export default class TicketsController {
       ticket.merge(ticketUpdates)
 
       // 3. Guardar en historial solo si el estado cambió
+      const estadoAnteriorId = ticket.$original.estadoId; // Obtener el estado original antes de merge
+      const usuarioQueActualizaId = payload.usuario_id;
+
       if (estadoAnteriorId !== ticket.estadoId && usuarioQueActualizaId) {
         const estadoAnterior = await EstadoTicket.find(estadoAnteriorId)
         const estadoNuevo = await EstadoTicket.find(ticket.estadoId)
@@ -212,17 +231,14 @@ export default class TicketsController {
 
       // 4. Notificación de cambio de estado
       const estado = await EstadoTicket.find(ticket.estadoId)
+      const ID_ESTADO_NOTIFICACION_CAMBIO = 1;
 
-      // ⭐⭐⭐ LA CORRECCIÓN ES AQUÍ: cambiamos 'crearParaTodos' por 'crearParaCreadorTicket' ⭐⭐⭐
-      const ID_ESTADO_NOTIFICACION_CAMBIO = 1; // EJEMPLO: Asegúrate de que este ID exista en tu tabla 'estado_notificacions'
-
-      await NotificacionesController.crearParaCreadorTicket({ // ¡Método renombrado!
+      await NotificacionesController.crearParaCreadorTicket({
         titulo: 'Cambio de estado',
         mensaje: `El ticket #${ticket.id} cambió de estado a ${estado?.nombre || 'nuevo estado'}`,
         ticketId: ticket.id,
-        estadoId: ID_ESTADO_NOTIFICACION_CAMBIO, // Usamos el ID de notificación válido
+        estadoId: ID_ESTADO_NOTIFICACION_CAMBIO,
       })
-      // ⭐⭐⭐ FIN DE LA CORRECCIÓN ⭐⭐⭐
 
       // 5. Lógica para fechaFinalizacion (cerrar/reabrir ticket)
       const estadoCerrado = await EstadoTicket.findBy('nombre', 'Cerrado')
@@ -245,7 +261,14 @@ export default class TicketsController {
       await ticket.load('prioridad')
       await ticket.load('creador')
 
-      return response.ok(ticket)
+      const ticketJson = ticket.toJSON()
+      if (ticketJson.usuarioAsignado) {
+        ticketJson.usuarioAsignado.nombreCompleto = `${ticketJson.usuarioAsignado.nombre} ${ticketJson.usuarioAsignado.apellido}`
+      }
+      if (ticketJson.creador) {
+        ticketJson.creador.nombreCompleto = `${ticketJson.creador.nombre} ${ticketJson.creador.apellido}`
+      }
+      return response.ok(ticketJson)
     } catch (error: any) {
       if (error.code === 'E_ROW_NOT_FOUND') {
         return response.notFound({ message: 'Ticket no encontrado' })
@@ -343,7 +366,31 @@ export default class TicketsController {
 
       const paginatedTickets = await query.paginate(page, limit)
 
-      return response.ok(paginatedTickets)
+      // ⭐ MODIFICACIÓN CLAVE: Accede y formatea el 'data' del objeto paginado.
+      const formattedPaginatedData = paginatedTickets.toJSON();
+
+      formattedPaginatedData.data = formattedPaginatedData.data.map((ticket: any) => {
+        // Asegurarse de que ticket.usuarioAsignado exista antes de acceder a sus propiedades
+        if (ticket.usuarioAsignado) {
+          ticket.usuarioAsignado.nombreCompleto = `${ticket.usuarioAsignado.nombre} ${ticket.usuarioAsignado.apellido}`
+        }
+        // Asegurarse de que ticket.creador exista antes de acceder a sus propiedades
+        if (ticket.creador) {
+          ticket.creador.nombreCompleto = `${ticket.creador.nombre} ${ticket.creador.apellido}`
+        }
+        // Si los comentarios también tienen usuario y quieres nombreCompleto:
+        if (ticket.comentarios && Array.isArray(ticket.comentarios)) {
+          ticket.comentarios.forEach((comentario: any) => {
+            if (comentario.usuario) {
+              comentario.usuario.nombreCompleto = `${comentario.usuario.nombre} ${comentario.usuario.apellido}`;
+            }
+          });
+        }
+        return ticket // Retorna el ticket ya formateado
+      })
+
+      return response.ok(formattedPaginatedData) // Devuelve el objeto paginado con el array 'data' formateado
+
     } catch (error) {
       console.error(error)
       return response.internalServerError({
