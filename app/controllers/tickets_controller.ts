@@ -222,7 +222,7 @@ export default class TicketsController {
         const estadoAnterior = await EstadoTicket.find(estadoAnteriorId)
         const estadoNuevo = await EstadoTicket.find(ticket.estadoId)
 
-        const comentarioTexto = `Cambio de estado: ${estadoAnterior?.nombre || estadoAnteriorId} → ${estadoNuevo?.nombre || ticket.estadoId}`
+        const comentarioTexto = `Cambio de estado: ${estadoAnterior?.nombre || estadoAnteriorId} -> ${estadoNuevo?.nombre || ticket.estadoId}`
 
         await HistorialEstadosTicket.create({
           ticketId: ticket.id,
