@@ -49,13 +49,25 @@ export default class extends BaseSchema {
         .references('id')
         .inTable('servicios')
         .onDelete('CASCADE')
+      table
+        .integer('creador_id') // Nuevo campo para el ID del creador
+        .unsigned()
+        .references('id')
+        .inTable('usuarios') // Nombre de tu tabla de usuarios
+        .onDelete('RESTRICT') // O 'CASCADE' si quieres eliminar tickets si el usuario creador se elimina (¡Cuidado con esto!)
+        .notNullable() // El creador siempre debe existir
+      table.string('nombre_archivo', 255).nullable() // <--- Asegúrate de que sea nullable
       table.dateTime('fecha_asignacion').nullable() // <--- Asegúrate de que sea nullable
+      table.dateTime('fecha_finalizacion').nullable()
       table.timestamp('created_at')
       table.timestamp('updated_at')
     })
   }
 
   async down() {
-    this.schema.dropTable(this.tableName)
+    this.schema.alterTable(this.tableName, (table) => {
+      table.dropColumn('nombre_archivo')
+      table.dropColumn('fecha_finalizacion')
+    })
   }
 }

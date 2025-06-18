@@ -1,25 +1,30 @@
-import { HttpContext } from '@adonisjs/core/http'
+import type { HttpContext } from '@adonisjs/core/http'
 import Ticket from '#models/tickets'
+import HistorialEstadosTicket from '#models/historial_estado_tickets'
+import EstadoTicket from '#models/estados_ticket'
+import NotificacionesController from './notificacions_controller.js'
 // Comentadas las importaciones de schema y rules para eliminar la validación
 // import { schema, rules } from '@adonisjs/core/validator'
 import app from '@adonisjs/core/services/app'
 import { cuid } from '@adonisjs/core/helpers'
 import { DateTime } from 'luxon'
+import { unlink, existsSync } from 'node:fs' // Importar para manejar archivos
 
 export default class TicketsController {
   /**
    * Listar todos los tickets.
-   * Incluye las relaciones para mostrar los nombres en el frontend.
    */
   async index({ response }: HttpContext) {
     const tickets = await Ticket.query()
+
       .preload('usuarioAsignado')
       .preload('categoria')
       .preload('empresa')
       .preload('servicio')
       .preload('estado')
       .preload('prioridad')
-      .orderBy('id', 'desc') // Ordena por ID descendente para mostrar los más recientes primero
+      .preload('creador')
+      .orderBy('id', 'desc')
     return response.ok(tickets)
   }
 
@@ -29,46 +34,55 @@ export default class TicketsController {
   async show({ params, response }: HttpContext) {
     const ticket = await Ticket.query()
       .where('id', params.id)
-
       .preload('usuarioAsignado')
       .preload('categoria')
       .preload('empresa')
       .preload('servicio')
       .preload('estado')
       .preload('prioridad')
+      .preload('creador')
       .firstOrFail()
     return response.ok(ticket)
   }
 
   /**
    * Crear un nuevo ticket.
-   * ¡ADVERTENCIA! Validación removida temporalmente. (Recomendado: reintroducir validación)
    */
   async store({ request, response }: HttpContext) {
-    // Es mejor usar request.only para obtener todos los datos a la vez
     const data = request.only([
       'titulo',
       'descripcion',
       'estado_id',
       'prioridad_id',
       'empresas_id',
-      'usuario_asignado_id', // Nombre recibido del frontend
+      'usuario_asignado_id',
       'categoria_id',
       'servicio_id',
+      'userId',
     ])
-    const archivoAdjunto = request.file('archivo_adjunto')
+
+    const archivoAdjunto = request.file('archivo_adjunto', {
+      size: '5mb',
+      extnames: ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx', 'xls', 'xlsx'],
+    })
+
+    let uploadedFileName: string | null = null
 
     if (archivoAdjunto) {
-      const fileName = `${cuid()}.${archivoAdjunto.extname}`
-      await archivoAdjunto.move(app.tmpPath('uploads'), {
-        name: fileName,
+      if (!archivoAdjunto.isValid) {
+        return response.badRequest({
+          message: 'Archivo adjunto inválido',
+          errors: archivoAdjunto.errors,
+        })
+      }
+
+      uploadedFileName = `${cuid()}.${archivoAdjunto.extname}`
+      await archivoAdjunto.move(app.publicPath('uploads/tickets'), {
+        name: uploadedFileName,
         overwrite: true,
       })
-      // Si guardas la ruta del archivo, podrías añadirla al ticket
-      // ticket.nombreArchivoAdjunto = fileName
     }
 
-    // Crear un objeto para los datos del ticket
     const ticketData: Partial<Ticket> = {
       titulo: data.titulo,
       descripcion: data.descripcion,
@@ -77,34 +91,42 @@ export default class TicketsController {
       empresasId: data.empresas_id,
       categoriaId: data.categoria_id,
       servicioId: data.servicio_id,
+      nombreArchivo: uploadedFileName,
+      creadorId: data.userId,
     }
-
-    // Lógica para usuarioAsignadoId y fechaAsignacion
     if (data.usuario_asignado_id) {
-      ticketData.usuarioAsignadoId = data.usuario_asignado_id // Asigna el ID del usuario
-      ticketData.fechaAsignacion = DateTime.now() // <--- ASIGNAR FECHA ACTUAL DE LUXON
+      ticketData.usuarioAsignadoId = data.usuario_asignado_id
+      ticketData.fechaAsignacion = DateTime.now()
     } else {
-      // Si no hay usuario_asignado_id, asegúrate de que sean nulos (si es permitido por DB/modelo)
       ticketData.usuarioAsignadoId = null
       ticketData.fechaAsignacion = null
     }
 
     const ticket = await Ticket.create(ticketData)
 
-    // Precargar las relaciones para la respuesta
+    // Guardar en historial después de crear el ticket
+    await HistorialEstadosTicket.create({
+      ticketId: ticket.id,
+      estadoId: ticket.estadoId,
+      comentario: 'Ticket creado con estado inicial',
+      usuarioId: data.userId, // corregido
+      fechaCambio: DateTime.now(),
+    })
+
+    // Cargar relaciones
     await ticket.load('usuarioAsignado')
     await ticket.load('categoria')
     await ticket.load('empresa')
     await ticket.load('servicio')
     await ticket.load('estado')
     await ticket.load('prioridad')
+    await ticket.load('creador')
 
     return response.created(ticket)
   }
 
   /**
    * Actualizar un ticket existente.
-   * ¡ADVERTENCIA! Validación removida temporalmente.
    */
   async update({ params, request, response }: HttpContext) {
     const ticket = await Ticket.find(params.id)
@@ -112,72 +134,126 @@ export default class TicketsController {
       return response.notFound({ message: 'Ticket no encontrado' })
     }
 
-    // Ya no usamos request.validate(). Accedemos a los campos directamente.
     const data = request.only([
       'titulo',
       'descripcion',
       'estado_id',
       'prioridad_id',
-      'empresas_id', // Incluir cliente_id en los datos a actualizar
+      'empresas_id',
       'usuario_asignado_id',
       'categoria_id',
       'servicio_id',
-      'clear_adjunto', // Mantener esto si lo necesitas para la lógica del adjunto
+      'clear_adjunto',
+      'usuario_id',
     ])
-    const archivoAdjunto = request.file('archivo_adjunto')
 
-    // Actualizar solo los campos que fueron enviados en la solicitud
-    if (data.titulo !== undefined) ticket.titulo = data.titulo
-    if (data.descripcion !== undefined) ticket.descripcion = data.descripcion
-    if (data.estado_id !== undefined) ticket.estadoId = data.estado_id
-    if (data.prioridad_id !== undefined) ticket.prioridadId = data.prioridad_id
+    const archivoAdjunto = request.file('archivo_adjunto', {
+      size: '5mb',
+      extnames: ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx', 'xls', 'xlsx'],
+    })
 
-    // Manejar cliente_id: puede ser un número o null
-    if (data.empresas_id !== undefined) ticket.empresasId = data.empresas_id
+    if (data.clear_adjunto) {
+      if (ticket.nombreArchivo) {
+        const filePath = app.publicPath(`uploads/tickets/${ticket.nombreArchivo}`)
+        if (existsSync(filePath)) {
+          unlink(filePath, (err) => {
+            if (err) console.error('Error al eliminar archivo adjunto:', err)
+          })
+        }
+        ticket.nombreArchivo = null
+      }
+    } else if (archivoAdjunto) {
+      if (!archivoAdjunto.isValid) {
+        return response.badRequest({
+          message: 'Archivo adjunto inválido',
+          errors: archivoAdjunto.errors,
+        })
+      }
+
+      if (ticket.nombreArchivo) {
+        const oldFilePath = app.publicPath(`uploads/tickets/${ticket.nombreArchivo}`)
+        if (existsSync(oldFilePath)) {
+          unlink(oldFilePath, (err) => {
+            if (err) console.error('Error al eliminar archivo adjunto anterior:', err)
+          })
+        }
+      }
+
+      const newFileName = `${cuid()}.${archivoAdjunto.extname}`
+      await archivoAdjunto.move(app.publicPath('uploads/tickets'), {
+        name: newFileName,
+        overwrite: true,
+      })
+
+      ticket.nombreArchivo = newFileName
+    }
+
+    const estadoAnteriorId = ticket.estadoId
+    const { usuario_id: usuarioId, ...restoData } = data
+
+    ticket.merge(restoData)
 
     if (data.usuario_asignado_id !== undefined) {
-      // Si el usuario asignado cambia O se asigna por primera vez
       if (ticket.usuarioAsignadoId !== data.usuario_asignado_id) {
         ticket.usuarioAsignadoId = data.usuario_asignado_id
-        if (data.usuario_asignado_id !== null) {
-          // Si se asigna a alguien
-          ticket.fechaAsignacion = DateTime.now() // Actualiza la fecha de asignación
-        } else {
-          // Si se desasigna
-          ticket.fechaAsignacion = null // O la dejas como estaba, dependiendo de tu lógica
-        }
+        ticket.fechaAsignacion = data.usuario_asignado_id !== null ? DateTime.now() : null
       }
     }
 
+    if (data.estado_id !== undefined) ticket.estadoId = data.estado_id
+    if (data.prioridad_id !== undefined) ticket.prioridadId = data.prioridad_id
+    if (data.empresas_id !== undefined) ticket.empresasId = data.empresas_id
     if (data.categoria_id !== undefined) ticket.categoriaId = data.categoria_id
     if (data.servicio_id !== undefined) ticket.servicioId = data.servicio_id
 
-    // Lógica para el archivo adjunto en la actualización
-    if (data.clear_adjunto) {
-    } else if (archivoAdjunto) {
-      const fileName = `${cuid()}.${archivoAdjunto.extname}`
-      await archivoAdjunto.move(app.tmpPath('uploads'), {
-        name: fileName,
-        overwrite: true,
-      })
-    }
-
     await ticket.save()
 
-    // Precargar las relaciones para la respuesta
+    // ✅ Comentario del historial usando nombres de estados
+    if (estadoAnteriorId !== restoData.estado_id && usuarioId) {
+      const estadoAnterior = await EstadoTicket.find(estadoAnteriorId)
+      const estadoNuevo = await EstadoTicket.find(restoData.estado_id)
+
+      const comentarioTexto = `Cambio de estado: ${estadoAnterior?.nombre || estadoAnteriorId} -> ${estadoNuevo?.nombre || restoData.estado_id}`
+
+      await HistorialEstadosTicket.create({
+        ticketId: ticket.id,
+        estadoId: ticket.estadoId,
+        comentario: comentarioTexto,
+        usuarioId: usuarioId,
+        fechaCambio: DateTime.now(),
+      })
+    }
+    const estado = await EstadoTicket.find(ticket.estadoId)
+    await NotificacionesController.crearParaTodos({
+      titulo: 'Cambio de estado',
+      mensaje: `El ticket #${ticket.id} cambió de estado a ${estado?.nombre || 'nuevo estado'}`,
+      ticketId: ticket.id,
+      estadoId: 1,
+    })
+
+    const estadoCerrado = await EstadoTicket.findBy('nombre', 'Cerrado')
+
+    if (estadoCerrado && ticket.estadoId === estadoCerrado.id) {
+      ticket.fechaFinalizacion = DateTime.now()
+    } else if (ticket.fechaFinalizacion) {
+      // Si estaba cerrado y ahora no, limpia la fecha
+      ticket.fechaFinalizacion = null
+    }
 
     await ticket.load('usuarioAsignado')
     await ticket.load('categoria')
-    await ticket.load('empresa') // Asegúrate de que la relación empresa esté definida en el modelo Ticket
+    await ticket.load('empresa')
     await ticket.load('servicio')
     await ticket.load('estado')
     await ticket.load('prioridad')
+    await ticket.load('creador')
 
     return response.ok(ticket)
   }
 
   /**
    * Eliminar un ticket.
+   * También elimina el archivo adjunto si existe.
    */
   async destroy({ params, response }: HttpContext) {
     const ticket = await Ticket.find(params.id)
@@ -185,7 +261,79 @@ export default class TicketsController {
       return response.notFound({ message: 'Ticket no encontrado' })
     }
 
+    // Eliminar el archivo adjunto físico si existe
+    if (ticket.nombreArchivo) {
+      const filePath = app.publicPath(`uploads/tickets/${ticket.nombreArchivo}`)
+      if (existsSync(filePath)) {
+        unlink(filePath, (err) => {
+          if (err) console.error('Error al eliminar archivo adjunto al destruir ticket:', err)
+        })
+      }
+    }
+
     await ticket.delete()
     return response.ok({ mensaje: 'Ticket eliminado correctamente' })
   }
+
+  /**
+   * Nuevo método para servir archivos adjuntos (descarga/visualización).
+   */
+  async downloadAttachment({ params, response }: HttpContext) {
+    const ticket = await Ticket.find(params.id)
+    if (!ticket || !ticket.nombreArchivo) {
+      return response.notFound({ message: 'Archivo adjunto no encontrado o ticket inválido.' })
+    }
+
+    const filePath = app.publicPath(`uploads/tickets/${ticket.nombreArchivo}`)
+
+    if (!existsSync(filePath)) {
+      return response.notFound({ message: 'El archivo adjunto no existe en el servidor.' })
+    }
+
+    // `download` automáticamente establece los headers para descarga o visualización
+    return response.download(filePath)
+  }
+
+  async historial({ request, response }: HttpContext) {
+    try {
+      const page = request.input('page', 1)
+      const limit = request.input('limit', 10)
+
+      const estadoId = request.input('estado_id')
+      const creadorId = request.input('creador_id')
+      const categoriaId = request.input('categoria_id')
+      const fechaInicio = request.input('fecha_inicio')
+      const fechaFin = request.input('fecha_fin')
+
+      const query = Ticket.query()
+        .preload('usuarioAsignado')
+        .preload('categoria')
+        .preload('empresa')
+        .preload('servicio')
+        .preload('estado')
+        .preload('prioridad')
+        .preload('creador')
+        .preload('comentarios', (comentarioQuery) => comentarioQuery.preload('usuario'))
+        .orderBy('id', 'desc')
+
+      if (estadoId) query.where('estado_id', estadoId)
+      if (creadorId) query.where('creador_id', creadorId)
+      if (categoriaId) query.where('categoria_id', categoriaId)
+
+      if (fechaInicio && fechaFin) {
+        query.whereBetween('created_at', [fechaInicio, fechaFin])
+      }
+
+      const paginatedTickets = await query.paginate(page, limit)
+
+      return response.ok(paginatedTickets)
+    } catch (error) {
+      console.error(error)
+      return response.internalServerError({
+        message: 'Error al obtener el historial de tickets',
+        error,
+      })
+    }
+  }
 }
+
