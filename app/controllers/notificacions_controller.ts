@@ -1,7 +1,13 @@
+// app/Controllers/Http/NotificacionesController.ts
+
 import type { HttpContext } from '@adonisjs/core/http'
 import Notificacion from '#models/notificaciones'
-import Usuario from '#models/usuarios'
-import Ticket from '#models/tickets' // ¡Importante!
+import Usuario from '#models/usuarios' // Aunque no se usa directamente en este código, se mantiene tu importación original
+import Ticket from '#models/tickets'
+
+// ¡IMPORTANTE! Importa el emisor desde tu NotificationStreamController.
+// Asegúrate de que la ruta sea correcta.
+import { notificationEmitter } from '#controllers/NotificationStreamController'
 
 export default class NotificacionesController {
   /**
@@ -66,8 +72,23 @@ export default class NotificacionesController {
         leido: false,
       }
 
-      await Notificacion.create(notificacionData) // Usamos `create` porque es una sola notificación
-      console.log(`Notificación de cambio de estado creada para el creador del ticket #${data.ticketId} (Usuario ID: ${ticket.creadorId}).`)
+      // Guarda la notificación en la base de datos y OBTÉN LA INSTANCIA CON EL ID
+      const notificacionCreada = await Notificacion.create(notificacionData)
+      console.log(`Notificación de cambio de estado creada para el creador del ticket #${data.ticketId} (Usuario ID: ${ticket.creadorId}). ID de Notificación: ${notificacionCreada.id}`)
+
+      // --- INICIO DE LA INTEGRACIÓN CRÍTICA PARA SSE ---
+      // Emite un evento a través del EventEmitter global que escucha el NotificationStreamController.
+      // Esta emisión activará el envío de la notificación a los clientes conectados vía SSE.
+      notificationEmitter.emit('newNotification', {
+        id: notificacionCreada.id, // <-- ¡AGREGADO: EL ID DE LA NOTIFICACIÓN RECIÉN CREADA!
+        ticketId: data.ticketId,
+        userId: ticket.creadorId, // Fundamental: para que el frontend filtre la notificación por usuario
+        message: data.mensaje,
+        title: data.titulo,
+        statusId: data.estadoId // Incluye cualquier dato adicional que el frontend necesite para la notificación
+      })
+      console.log(`[NotificacionesController] Evento 'newNotification' emitido con ID: ${notificacionCreada.id} para userId: ${ticket.creadorId}`); // Log para confirmar la emisión
+      // --- FIN DE LA INTEGRACIÓN CRÍTICA PARA SSE ---
 
     } catch (error) {
       console.error('[NotificacionesController] Error al crear notificación para el creador del ticket:', error)

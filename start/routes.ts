@@ -23,6 +23,9 @@ import NotificacionesController from '#controllers/notificacions_controller'
 import DashboardController from '#controllers/dashboard_controller'
 import UploadController from '#controllers/upload_controller' // Asegúrate de importar UploadController
 
+// ¡Importa tu NotificationStreamController!
+import NotificationStreamController from '#controllers/NotificationStreamController'
+
 // ======================== RUTAS GLOBALES ========================
 router.get('/', async () => {
   return { hello: 'world' }
@@ -82,6 +85,11 @@ router
     router.resource('notificaciones', NotificacionesController).apiOnly()
       .where('id', router.matchers.number())
     router.put('notificaciones/:id/leida', [NotificacionesController, 'marcarComoLeida'])
+
+    // --- ¡AQUÍ SE AGREGA LA RUTA PARA SERVER-SENT EVENTS (SSE)! ---
+    // Esta ruta establecerá la conexión SSE para las notificaciones en tiempo real.
+    router.get('notifications/stream', [NotificationStreamController, 'stream']).as('notification.stream')
+    // -----------------------------------------------------------
 
 
     // === ENTIDADES MAESTRAS (solo lectura) ===
