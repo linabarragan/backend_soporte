@@ -1,5 +1,3 @@
-// import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
-// import Proyecto from 'App/Models/Proyecto'
 import type { HttpContext } from '@adonisjs/core/http'
 import Proyecto from '#models/proyectos' // Asegúrate de que esta ruta al modelo es correcta
 
@@ -32,10 +30,15 @@ export default class ProyectosController {
     try {
       const datos = request.only(['nombre', 'empresa_id'])
 
-      // Opcional: Puedes añadir validación aquí si lo deseas
-      // if (!datos.nombre || !datos.empresa_id) {
-      //     return response.badRequest({ mensaje: 'Faltan campos obligatorios: nombre y empresa_id' });
-      // }
+      // --- Lógica de verificación de unicidad del nombre al CREAR ---
+      const existingProyecto = await Proyecto.query()
+        .where('nombre', datos.nombre)
+        .first()
+
+      if (existingProyecto) {
+        return response.conflict({ message: 'El nombre del proyecto ya está en uso. Por favor, elige uno diferente.' })
+      }
+      // --- FIN Lógica de verificación de unicidad ---
 
       const nuevoProyecto = await Proyecto.create(datos)
 
@@ -69,10 +72,19 @@ export default class ProyectosController {
       // request.only() para obtener solo los campos permitidos del cuerpo JSON
       const datos = request.only(['nombre', 'empresa_id'])
 
-      // Opcional: Puedes añadir validación aquí si lo deseas
-      // if (!datos.nombre || !datos.empresa_id) {
-      //     return response.badRequest({ mensaje: 'Faltan campos obligatorios para actualizar: nombre y empresa_id' });
-      // }
+      // --- Lógica de verificación de unicidad del nombre al ACTUALIZAR ---
+      // Solo verificar si el nombre ha cambiado
+      if (datos.nombre && datos.nombre !== proyecto.nombre) {
+        const existingProyecto = await Proyecto.query()
+          .where('nombre', datos.nombre)
+          .whereNot('id', params.id) // Excluir el propio proyecto que se está actualizando
+          .first()
+
+        if (existingProyecto) {
+          return response.conflict({ message: 'El nombre del proyecto ya está en uso por otro proyecto. Por favor, elige uno diferente.' })
+        }
+      }
+      // --- FIN Lógica de verificación de unicidad ---
 
       // Fusiona los datos recibidos con el modelo existente y guarda
       proyecto.merge(datos)
@@ -125,4 +137,30 @@ export default class ProyectosController {
       return response.status(500).send({ mensaje: 'Error al eliminar el proyecto' })
     }
   }
-}
+
+  // --- **Nuevo Método: `checkUniqueName` (CORREGIDO)** ---
+  // Este método debe estar DENTRO de las llaves de la clase ProyectosController { ... }
+  public async checkUniqueName({ request, response }: HttpContext) {
+    const name = request.input('name')
+    const excludeId = request.input('excludeId')
+
+    if (!name) {
+      return response.badRequest({ message: 'El nombre es requerido para la verificación de unicidad.' })
+    }
+
+    let query = Proyecto.query().where('nombre', name)
+
+    if (excludeId) {
+      query = query.whereNot('id', excludeId)
+    }
+
+    const existingProyecto = await query.first()
+
+    // Si existingProyecto es null, el nombre es único.
+    if (existingProyecto) {
+      return response.conflict({ isUnique: false, message: 'El nombre del proyecto ya está en uso.' })
+    }
+
+    return response.ok({ isUnique: true, message: 'El nombre del proyecto está disponible.' })
+  }
+} // <--- Asegúrate de que esta es la ÚNICA llave de cierre de la clase.

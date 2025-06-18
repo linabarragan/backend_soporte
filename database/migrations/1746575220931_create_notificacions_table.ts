@@ -22,6 +22,8 @@ export default class extends BaseSchema {
         .inTable('estado_notificacions')
         .onDelete('CASCADE')
 
+      table.integer('ticket_id').unsigned().references('id').inTable('tickets').onDelete('CASCADE')
+
       table.boolean('leido').defaultTo(false)
       table.timestamp('created_at')
       table.timestamp('updated_at')
@@ -29,6 +31,8 @@ export default class extends BaseSchema {
   }
 
   async down() {
-    this.schema.dropTable(this.tableName)
+    this.schema.alterTable(this.tableName, (table) => {
+      table.dropColumn('ticket_id')
+    })
   }
 }

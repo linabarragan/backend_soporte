@@ -21,6 +21,9 @@ export default class Notificacion extends BaseModel {
   @column()
   declare estadoId: number
 
+  @column()
+  declare ticketId: number
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
