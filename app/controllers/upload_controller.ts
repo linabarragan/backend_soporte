@@ -7,6 +7,7 @@ export default class UploadController {
   public async upload({ request, response }: HttpContext) {
     try {
       const file = request.file('file', {
+        size: '2mb',
         extnames: ['jpg', 'png', 'jpeg', 'gif', 'pdf', 'docx', 'xlsx', 'zip', 'txt'],
       })
 

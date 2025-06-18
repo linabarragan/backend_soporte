@@ -2,7 +2,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import Ticket from '#models/tickets'
 import HistorialEstadosTicket from '#models/historial_estado_tickets'
 import EstadoTicket from '#models/estados_ticket'
-import EstadoNotificacion from '#models/estado_notificacions'; // ¡Importante! Asegúrate de tener este modelo
+import EstadoNotificacion from '#models/estados_notificacion'; // ¡Importante! Asegúrate de tener este modelo
 import NotificacionesController from './notificacions_controller.js'
 import app from '@adonisjs/core/services/app'
 import { cuid } from '@adonisjs/core/helpers'
@@ -331,7 +331,7 @@ export default class TicketsController {
         .preload('prioridad')
         .preload('creador')
         .preload('comentarios', (comentarioQuery) => comentarioQuery.preload('usuario'))
-        .orderBy('created_at', 'desc')
+        .orderBy('id', 'desc')
 
       if (estadoId) query.where('estado_id', estadoId)
       if (creadorId) query.where('creador_id', creadorId)
