@@ -2,7 +2,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import Ticket from '#models/tickets'
 import HistorialEstadosTicket from '#models/historial_estado_tickets'
 import EstadoTicket from '#models/estados_ticket'
-import EstadoNotificacion from '#models/estados_notificacion';
+import EstadoNotificacion from '#models/estados_notificacion'
 import NotificacionesController from './notificacions_controller.js'
 import app from '@adonisjs/core/services/app'
 import { cuid } from '@adonisjs/core/helpers'
@@ -28,7 +28,7 @@ export default class TicketsController {
       .preload('creador')
       .orderBy('id', 'desc')
 
-    const formattedTickets = tickets.map(ticket => {
+    const formattedTickets = tickets.map((ticket) => {
       const ticketJson = ticket.toJSON()
       if (ticketJson.usuarioAsignado) {
         ticketJson.usuarioAsignado.nombreCompleto = `${ticketJson.usuarioAsignado.nombre} ${ticketJson.usuarioAsignado.apellido}`
@@ -133,11 +133,14 @@ export default class TicketsController {
       return response.created(ticketJson)
     } catch (error) {
       if (error.status === 422) {
-        console.error('Errores de validación de VineJS en store:', error.messages);
+        console.error('Errores de validación de VineJS en store:', error.messages)
         return response.unprocessableEntity(error.messages)
       }
       console.error('Error al crear ticket:', error)
-      return response.internalServerError({ message: 'Error al crear el ticket', error: error.message })
+      return response.internalServerError({
+        message: 'Error al crear el ticket',
+        error: error.message,
+      })
     }
   }
 
@@ -202,8 +205,9 @@ export default class TicketsController {
       // Lógica específica para `usuario_asignado_id` y `fechaAsignacion`
       if (payload.usuario_asignado_id !== undefined) {
         if (ticket.usuarioAsignadoId !== payload.usuario_asignado_id) {
-            ticketUpdates.usuarioAsignadoId = payload.usuario_asignado_id
-            ticketUpdates.fechaAsignacion = payload.usuario_asignado_id !== null ? DateTime.now() : null
+          ticketUpdates.usuarioAsignadoId = payload.usuario_asignado_id
+          ticketUpdates.fechaAsignacion =
+            payload.usuario_asignado_id !== null ? DateTime.now() : null
         }
       }
 
@@ -211,8 +215,8 @@ export default class TicketsController {
       ticket.merge(ticketUpdates)
 
       // 3. Guardar en historial solo si el estado cambió
-      const estadoAnteriorId = ticket.$original.estadoId; // Obtener el estado original antes de merge
-      const usuarioQueActualizaId = payload.usuario_id;
+      const estadoAnteriorId = ticket.$original.estadoId // Obtener el estado original antes de merge
+      const usuarioQueActualizaId = payload.usuario_id
 
       if (estadoAnteriorId !== ticket.estadoId && usuarioQueActualizaId) {
         const estadoAnterior = await EstadoTicket.find(estadoAnteriorId)
@@ -231,7 +235,7 @@ export default class TicketsController {
 
       // 4. Notificación de cambio de estado
       const estado = await EstadoTicket.find(ticket.estadoId)
-      const ID_ESTADO_NOTIFICACION_CAMBIO = 1;
+      const ID_ESTADO_NOTIFICACION_CAMBIO = 1
 
       await NotificacionesController.crearParaCreadorTicket({
         titulo: 'Cambio de estado',
@@ -245,7 +249,10 @@ export default class TicketsController {
 
       if (estadoCerrado && ticket.estadoId === estadoCerrado.id && !ticket.fechaFinalizacion) {
         ticket.fechaFinalizacion = DateTime.now()
-      } else if (ticket.fechaFinalizacion && (!estadoCerrado || ticket.estadoId !== estadoCerrado.id)) {
+      } else if (
+        ticket.fechaFinalizacion &&
+        (!estadoCerrado || ticket.estadoId !== estadoCerrado.id)
+      ) {
         ticket.fechaFinalizacion = null
       }
 
@@ -278,10 +285,19 @@ export default class TicketsController {
         return response.unprocessableEntity(error.messages)
       }
       console.error('Error al actualizar ticket:', error)
-      if (error.message && error.message.includes('Error al eliminar el archivo adjunto existente')) {
-          return response.internalServerError({ message: 'Error en el servidor al eliminar el archivo adjunto. Verifique permisos.', error: error.message })
+      if (
+        error.message &&
+        error.message.includes('Error al eliminar el archivo adjunto existente')
+      ) {
+        return response.internalServerError({
+          message: 'Error en el servidor al eliminar el archivo adjunto. Verifique permisos.',
+          error: error.message,
+        })
       }
-      return response.internalServerError({ message: 'Error desconocido al actualizar el ticket', error: error.message })
+      return response.internalServerError({
+        message: 'Error desconocido al actualizar el ticket',
+        error: error.message,
+      })
     }
   }
 
@@ -301,7 +317,7 @@ export default class TicketsController {
       if (existsSync(filePath)) {
         try {
           await rm(filePath)
-          console.log(`Archivo ${filePath} eliminado exitosamente al destruir ticket.`);
+          console.log(`Archivo ${filePath} eliminado exitosamente al destruir ticket.`)
         } catch (err: any) {
           console.error('Error al eliminar archivo adjunto al destruir ticket:', err)
         }
@@ -338,12 +354,8 @@ export default class TicketsController {
     try {
       const page = request.input('page', 1)
       const limit = request.input('limit', 10)
-
-      const estadoId = request.input('estado_id')
-      const creadorId = request.input('creador_id')
-      const categoriaId = request.input('categoria_id')
-      const fechaInicio = request.input('fecha_inicio')
-      const fechaFin = request.input('fecha_fin')
+      const sortOrder = request.input('sortOrder', 'desc')
+      const searchTerm = request.input('search', '')
 
       const query = Ticket.query()
         .preload('usuarioAsignado')
@@ -354,49 +366,53 @@ export default class TicketsController {
         .preload('prioridad')
         .preload('creador')
         .preload('comentarios', (comentarioQuery) => comentarioQuery.preload('usuario'))
-        .orderBy('id', 'desc')
+        .orderBy('created_at', sortOrder)
 
-      if (estadoId) query.where('estado_id', estadoId)
-      if (creadorId) query.where('creador_id', creadorId)
-      if (categoriaId) query.where('categoria_id', categoriaId)
+      // Aplicar búsqueda si existe
+      if (searchTerm) {
+        query.where((builder) => {
+          builder
+            .where('titulo', 'LIKE', `%${searchTerm}%`)
+            .orWhereHas('estado', (q) => q.where('nombre', 'LIKE', `%${searchTerm}%`))
+            .orWhereHas('prioridad', (q) => q.where('nombre', 'LIKE', `%${searchTerm}%`))
+            .orWhereHas('creador', (q) => {
+              q.where('nombre', 'LIKE', `%${searchTerm}%`).orWhere(
+                'apellido',
+                'LIKE',
+                `%${searchTerm}%`
+              )
+            })
 
-      if (fechaInicio && fechaFin) {
-        query.whereBetween('created_at', [fechaInicio, fechaFin])
+          // Nueva condición para búsqueda por fecha (solo si el término parece una fecha)
+          if (this.isValidDate(searchTerm)) {
+            builder
+              .orWhereRaw('DATE(created_at) = ?', [searchTerm])
+              .orWhereRaw('DATE_FORMAT(created_at, "%Y-%m") = ?', [searchTerm])
+          }
+        })
       }
 
       const paginatedTickets = await query.paginate(page, limit)
+      const result = paginatedTickets.toJSON()
 
-      // ⭐ MODIFICACIÓN CLAVE: Accede y formatea el 'data' del objeto paginado.
-      const formattedPaginatedData = paginatedTickets.toJSON();
-
-      formattedPaginatedData.data = formattedPaginatedData.data.map((ticket: any) => {
-        // Asegurarse de que ticket.usuarioAsignado exista antes de acceder a sus propiedades
-        if (ticket.usuarioAsignado) {
-          ticket.usuarioAsignado.nombreCompleto = `${ticket.usuarioAsignado.nombre} ${ticket.usuarioAsignado.apellido}`
-        }
-        // Asegurarse de que ticket.creador exista antes de acceder a sus propiedades
-        if (ticket.creador) {
-          ticket.creador.nombreCompleto = `${ticket.creador.nombre} ${ticket.creador.apellido}`
-        }
-        // Si los comentarios también tienen usuario y quieres nombreCompleto:
-        if (ticket.comentarios && Array.isArray(ticket.comentarios)) {
-          ticket.comentarios.forEach((comentario: any) => {
-            if (comentario.usuario) {
-              comentario.usuario.nombreCompleto = `${comentario.usuario.nombre} ${comentario.usuario.apellido}`;
-            }
-          });
-        }
-        return ticket // Retorna el ticket ya formateado
+      return response.status(200).json({
+        success: true,
+        data: result.data,
+        meta: result.meta, // Puedes devolver el meta completo directamente
       })
-
-      return response.ok(formattedPaginatedData) // Devuelve el objeto paginado con el array 'data' formateado
-
     } catch (error) {
-      console.error(error)
-      return response.internalServerError({
-        message: 'Error al obtener el historial de tickets',
-        error,
+      console.error('Error detallado:', error) // Log más informativo
+      return response.status(500).json({
+        success: false,
+        message: 'Error al obtener el historial',
+        error: error.message,
       })
     }
+  }
+
+  // Añade este método a tu controlador
+  private isValidDate(dateString: string): boolean {
+    const datePattern = /^\d{4}-\d{2}(-\d{2})?$/
+    return datePattern.test(dateString)
   }
 }
