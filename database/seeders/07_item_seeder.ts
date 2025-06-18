@@ -10,6 +10,8 @@ export default class ItemSeeder extends BaseSeeder {
         url: '/dashboard',
         icon: 'mdi-view-dashboard',
       },
+
+      // Configuración (items)
       {
         nombre: 'Perfil',
         url: '/profile',
@@ -18,27 +20,31 @@ export default class ItemSeeder extends BaseSeeder {
       {
         nombre: 'Roles',
         url: '/roles-crud',
-        icon: 'mdi-account-group',
+        icon: 'mdi-account-cog',
       },
       {
         nombre: 'Permisos',
         url: '/permisos',
-        icon: 'mdi-account-group-outline',
+        icon: 'mdi-shield-account',
       },
+
+      // Tickets
       {
         nombre: 'Crear Ticket',
         url: '/tickets',
-        icon: 'mdi-ticket',
+        icon: 'mdi-ticket-confirmation',
       },
       {
         nombre: 'Historial Tickets',
         url: '/historial-tickets',
         icon: 'mdi-history',
       },
+
+      // Otros items
       {
         nombre: 'Usuarios',
         url: '/Usuarios',
-        icon: 'mdi-table',
+        icon: 'mdi-account-multiple',
       },
       {
         nombre: 'Empresas',
@@ -48,12 +54,12 @@ export default class ItemSeeder extends BaseSeeder {
       {
         nombre: 'Proyectos',
         url: '/proyectos',
-        icon: 'mdi-domain',
+        icon: 'mdi-folder-multiple',
       },
       {
         nombre: 'Notificaciones',
         url: '/Notificaciones',
-        icon: 'mdi-history',
+        icon: 'mdi-bell',
       },
     ])
   }
