@@ -70,7 +70,7 @@ export default class RolesPermisosController {
     try {
       const rolId = params.rolId
 
-      if (!rolId || isNaN(Number(rolId))) {
+      if (!rolId || Number.isNaN(Number(rolId))) {
         return response.badRequest({ message: 'ID de rol inválido.' })
       }
 
@@ -103,10 +103,10 @@ export default class RolesPermisosController {
     const cleanRolId = Number(rolId)
     const cleanItemId = itemId === undefined || itemId === '' ? null : Number(itemId)
 
-    if (isNaN(cleanRolId)) {
+    if (Number.isNaN(cleanRolId)) {
       return response.badRequest({ message: 'El ID de rol es inválido.' })
     }
-    if (itemId !== undefined && itemId !== '' && isNaN(cleanItemId as number)) {
+    if (itemId !== undefined && itemId !== '' && Number.isNaN(cleanItemId as number)) {
       return response.badRequest({ message: 'El ID del ítem debe ser un número válido o nulo.' })
     }
 
@@ -143,7 +143,7 @@ export default class RolesPermisosController {
     if (selectedVistas && selectedVistas.length > 0) {
       for (const vistaId of selectedVistas) {
         const numericVistaId = Number(vistaId)
-        if (isNaN(numericVistaId)) {
+        if (Number.isNaN(numericVistaId)) {
           return response.badRequest({
             message: `El ID de la vista '${vistaId}' no es un número válido.`,
           })
@@ -209,7 +209,7 @@ export default class RolesPermisosController {
     const numericRolId = Number(rolId)
     const numericPermisoId = Number(permisoId)
 
-    if (isNaN(numericRolId) || isNaN(numericPermisoId)) {
+    if (Number.isNaN(numericRolId) || Number.isNaN(numericPermisoId)) {
       console.error('Backend DELETE: rolId o permisoId son inválidos o "undefined"')
       return response.badRequest({ message: 'Los IDs de rol o permiso no son válidos.' })
     }
@@ -221,7 +221,7 @@ export default class RolesPermisosController {
     } else if (itemId !== undefined && itemId !== null && itemId !== '') {
       // Si tiene valor, intentar convertir a número
       actualItemId = Number(itemId)
-      if (isNaN(actualItemId)) {
+      if (Number.isNaN(actualItemId)) {
         console.error('Backend DELETE: ID del ítem no válido (NaN después de conversión):', itemId)
         return response.badRequest({ message: 'El ID del ítem no es válido.' })
       }
@@ -249,7 +249,7 @@ export default class RolesPermisosController {
 
       console.log('Backend DELETE: Filas eliminadas:', deletedRows)
 
-      if (deletedRows === 0) {
+      if (deletedRows.length === 0) {
         return response.notFound({ message: 'Asignación no encontrada o ya eliminada.' })
       }
 

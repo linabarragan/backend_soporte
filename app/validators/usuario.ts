@@ -13,7 +13,7 @@ export const crear = vine.compile(
     password: vine.string().minLength(6),
 
     // ✨ ASEGÚRATE DE QUE ESTO ES ASÍ:
-    rol_id: vine.number().positive(), 
+    rol_id: vine.number().positive(),
     empresa_id: vine.number().positive(),
   })
 )
@@ -26,12 +26,15 @@ export const actualizar = vine.compile(
   vine.object({
     nombre: vine.string().minLength(2).maxLength(50).optional(),
     apellido: vine.string().minLength(2).maxLength(50).optional(),
-    telefono: vine.string().regex(/^3\d{9}$/).optional(),
+    telefono: vine
+      .string()
+      .regex(/^3\d{9}$/)
+      .optional(),
     correo: vine.string().email().optional(),
     password: vine.string().minLength(6).optional(),
 
     // ✨ ASEGÚRATE DE QUE ESTO ES ASÍ:
-    rol_id: vine.number().positive().optional(), 
+    rol_id: vine.number().positive().optional(),
     empresa_id: vine.number().positive().optional(),
   })
 )

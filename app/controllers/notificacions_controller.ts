@@ -2,12 +2,13 @@
 
 import type { HttpContext } from '@adonisjs/core/http'
 import Notificacion from '#models/notificaciones'
-import Usuario from '#models/usuarios' // Aunque no se usa directamente en este código, se mantiene tu importación original
+//import Usuario from '#models/usuarios' // Aunque no se usa directamente en este código, se mantiene tu importación original
 import Ticket from '#models/tickets'
 
 // ¡IMPORTANTE! Importa el emisor desde tu NotificationStreamController.
 // Asegúrate de que la ruta sea correcta.
-import { notificationEmitter } from '#controllers/NotificationStreamController'
+// Ajusta la ruta y el nombre del archivo según la ubicación real y el casing correcto
+import { notificationEmitter } from '#controllers/notification_stream_controller'
 
 export default class NotificacionesController {
   /**
@@ -58,7 +59,9 @@ export default class NotificacionesController {
       // 1. Encontrar el ticket para obtener el ID de su creador
       const ticket = await Ticket.find(data.ticketId)
       if (!ticket) {
-        console.warn(`[NotificacionesController] No se encontró el ticket con ID ${data.ticketId}. No se pudo crear la notificación para el creador.`)
+        console.warn(
+          `[NotificacionesController] No se encontró el ticket con ID ${data.ticketId}. No se pudo crear la notificación para el creador.`
+        )
         return // Salir si el ticket no existe
       }
 
@@ -74,7 +77,9 @@ export default class NotificacionesController {
 
       // Guarda la notificación en la base de datos y OBTÉN LA INSTANCIA CON EL ID
       const notificacionCreada = await Notificacion.create(notificacionData)
-      console.log(`Notificación de cambio de estado creada para el creador del ticket #${data.ticketId} (Usuario ID: ${ticket.creadorId}). ID de Notificación: ${notificacionCreada.id}`)
+      console.log(
+        `Notificación de cambio de estado creada para el creador del ticket #${data.ticketId} (Usuario ID: ${ticket.creadorId}). ID de Notificación: ${notificacionCreada.id}`
+      )
 
       // --- INICIO DE LA INTEGRACIÓN CRÍTICA PARA SSE ---
       // Emite un evento a través del EventEmitter global que escucha el NotificationStreamController.
@@ -85,13 +90,17 @@ export default class NotificacionesController {
         userId: ticket.creadorId, // Fundamental: para que el frontend filtre la notificación por usuario
         message: data.mensaje,
         title: data.titulo,
-        statusId: data.estadoId // Incluye cualquier dato adicional que el frontend necesite para la notificación
+        statusId: data.estadoId, // Incluye cualquier dato adicional que el frontend necesite para la notificación
       })
-      console.log(`[NotificacionesController] Evento 'newNotification' emitido con ID: ${notificacionCreada.id} para userId: ${ticket.creadorId}`); // Log para confirmar la emisión
+      console.log(
+        `[NotificacionesController] Evento 'newNotification' emitido con ID: ${notificacionCreada.id} para userId: ${ticket.creadorId}`
+      ) // Log para confirmar la emisión
       // --- FIN DE LA INTEGRACIÓN CRÍTICA PARA SSE ---
-
     } catch (error) {
-      console.error('[NotificacionesController] Error al crear notificación para el creador del ticket:', error)
+      console.error(
+        '[NotificacionesController] Error al crear notificación para el creador del ticket:',
+        error
+      )
     }
   }
 

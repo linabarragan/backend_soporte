@@ -15,7 +15,10 @@ export default class ItemsController {
       return response.ok(items)
     } catch (error) {
       console.error('Error al obtener ítems:', error)
-      return response.internalServerError({ message: 'Error al obtener ítems', error: error.message })
+      return response.internalServerError({
+        message: 'Error al obtener ítems',
+        error: error.message,
+      })
     }
   }
 
@@ -32,7 +35,10 @@ export default class ItemsController {
       return response.ok(item)
     } catch (error) {
       console.error(`Error al obtener ítem ${params.id}:`, error)
-      return response.internalServerError({ message: 'Error al obtener ítem', error: error.message })
+      return response.internalServerError({
+        message: 'Error al obtener ítem',
+        error: error.message,
+      })
     }
   }
 
@@ -63,7 +69,8 @@ export default class ItemsController {
   async update({ params, request, response }: HttpContext) {
     const { nombre, url, icon, parentId } = request.only(['nombre', 'url', 'icon', 'parentId'])
 
-    if (!nombre) { // Puedes hacer que los otros campos sean opcionales para la actualización
+    if (!nombre) {
+      // Puedes hacer que los otros campos sean opcionales para la actualización
       return response.badRequest({ message: 'El nombre del ítem es requerido para actualizar.' })
     }
 
@@ -81,7 +88,10 @@ export default class ItemsController {
       return response.ok(item)
     } catch (error) {
       console.error(`Error al actualizar ítem ${params.id}:`, error)
-      return response.internalServerError({ message: 'Error al actualizar ítem', error: error.message })
+      return response.internalServerError({
+        message: 'Error al actualizar ítem',
+        error: error.message,
+      })
     }
   }
 
@@ -102,7 +112,10 @@ export default class ItemsController {
       console.error(`Error al eliminar ítem ${params.id}:`, error)
       // OJO: Considera añadir lógica para evitar eliminar ítems si tienen asignaciones (FK en rol_permiso_items)
       // O si son padres de otros ítems.
-      return response.internalServerError({ message: 'Error al eliminar ítem', error: error.message })
+      return response.internalServerError({
+        message: 'Error al eliminar ítem',
+        error: error.message,
+      })
     }
   }
 }

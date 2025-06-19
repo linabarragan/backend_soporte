@@ -122,14 +122,19 @@ export default class EmpresasController {
       // Si 'empresa' es nulo, significa que el nombre es único
       if (empresa) {
         // El nombre ya existe
-        return response.conflict({ isUnique: false, message: 'El nombre de empresa ya está en uso.' })
+        return response.conflict({
+          isUnique: false,
+          message: 'El nombre de empresa ya está en uso.',
+        })
       } else {
         // El nombre es único
         return response.ok({ isUnique: true, message: 'El nombre de empresa está disponible.' })
       }
     } catch (error) {
       console.error('Error en checkUniqueName:', error)
-      return response.status(500).json({ isUnique: false, message: 'Error interno del servidor al verificar el nombre.' })
+      return response
+        .status(500)
+        .json({ isUnique: false, message: 'Error interno del servidor al verificar el nombre.' })
     }
   }
 }

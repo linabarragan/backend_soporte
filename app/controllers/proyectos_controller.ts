@@ -31,12 +31,12 @@ export default class ProyectosController {
       const datos = request.only(['nombre', 'empresa_id'])
 
       // --- Lógica de verificación de unicidad del nombre al CREAR ---
-      const existingProyecto = await Proyecto.query()
-        .where('nombre', datos.nombre)
-        .first()
+      const existingProyecto = await Proyecto.query().where('nombre', datos.nombre).first()
 
       if (existingProyecto) {
-        return response.conflict({ message: 'El nombre del proyecto ya está en uso. Por favor, elige uno diferente.' })
+        return response.conflict({
+          message: 'El nombre del proyecto ya está en uso. Por favor, elige uno diferente.',
+        })
       }
       // --- FIN Lógica de verificación de unicidad ---
 
@@ -81,7 +81,10 @@ export default class ProyectosController {
           .first()
 
         if (existingProyecto) {
-          return response.conflict({ message: 'El nombre del proyecto ya está en uso por otro proyecto. Por favor, elige uno diferente.' })
+          return response.conflict({
+            message:
+              'El nombre del proyecto ya está en uso por otro proyecto. Por favor, elige uno diferente.',
+          })
         }
       }
       // --- FIN Lógica de verificación de unicidad ---
@@ -145,7 +148,9 @@ export default class ProyectosController {
     const excludeId = request.input('excludeId')
 
     if (!name) {
-      return response.badRequest({ message: 'El nombre es requerido para la verificación de unicidad.' })
+      return response.badRequest({
+        message: 'El nombre es requerido para la verificación de unicidad.',
+      })
     }
 
     let query = Proyecto.query().where('nombre', name)
@@ -158,7 +163,10 @@ export default class ProyectosController {
 
     // Si existingProyecto es null, el nombre es único.
     if (existingProyecto) {
-      return response.conflict({ isUnique: false, message: 'El nombre del proyecto ya está en uso.' })
+      return response.conflict({
+        isUnique: false,
+        message: 'El nombre del proyecto ya está en uso.',
+      })
     }
 
     return response.ok({ isUnique: true, message: 'El nombre del proyecto está disponible.' })
