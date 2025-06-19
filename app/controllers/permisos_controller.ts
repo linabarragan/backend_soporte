@@ -3,7 +3,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 // *** ¡CAMBIO CRÍTICO AQUÍ! Asegúrate de importar el modelo Permiso, no el Rol. ***
 // La ruta correcta a tu modelo Permiso, usando la mayúscula en 'Permiso'
-import Permiso from '#models/permisos' 
+import Permiso from '#models/permisos'
 
 export default class PermisosController {
   /**
@@ -13,11 +13,14 @@ export default class PermisosController {
   async index({ response }: HttpContext) {
     try {
       // *** ¡CAMBIO CRÍTICO AQUÍ! Asegúrate de consultar el modelo Permiso. ***
-      const permisos = await Permiso.all() 
+      const permisos = await Permiso.all()
       return response.ok(permisos)
     } catch (error) {
       console.error('Error al obtener permisos en PermisosController:', error)
-      return response.internalServerError({ message: 'Error al obtener permisos', error: error.message })
+      return response.internalServerError({
+        message: 'Error al obtener permisos',
+        error: error.message,
+      })
     }
   }
 
@@ -34,7 +37,10 @@ export default class PermisosController {
       return response.ok(permiso)
     } catch (error) {
       console.error(`Error al obtener permiso ${params.id}:`, error)
-      return response.internalServerError({ message: 'Error al obtener permiso', error: error.message })
+      return response.internalServerError({
+        message: 'Error al obtener permiso',
+        error: error.message,
+      })
     }
   }
 
@@ -55,7 +61,10 @@ export default class PermisosController {
     } catch (error) {
       console.error('Error al crear permiso:', error)
       // Puedes añadir más lógica aquí para errores de duplicados, etc.
-      return response.internalServerError({ message: 'Error al crear permiso', error: error.message })
+      return response.internalServerError({
+        message: 'Error al crear permiso',
+        error: error.message,
+      })
     }
   }
 
@@ -81,7 +90,10 @@ export default class PermisosController {
       return response.ok(permiso)
     } catch (error) {
       console.error(`Error al actualizar permiso ${params.id}:`, error)
-      return response.internalServerError({ message: 'Error al actualizar permiso', error: error.message })
+      return response.internalServerError({
+        message: 'Error al actualizar permiso',
+        error: error.message,
+      })
     }
   }
 
@@ -102,7 +114,10 @@ export default class PermisosController {
       console.error(`Error al eliminar permiso ${params.id}:`, error)
       // OJO: Considera añadir lógica para evitar eliminar permisos si tienen asignaciones (FK en rol_permiso_items)
       // Esto causaría un error de restricción de clave foránea.
-      return response.internalServerError({ message: 'Error al eliminar permiso', error: error.message })
+      return response.internalServerError({
+        message: 'Error al eliminar permiso',
+        error: error.message,
+      })
     }
   }
 }

@@ -7,14 +7,10 @@ import { usuarioValidator } from '#validators/usuario'
 export default class UsuariosController {
   public async index({ response }: HttpContext) {
     try {
-      const users = await Usuario.query()
-        .preload('rol')
-        .preload('empresa')
-        .orderBy('id', 'asc')
+      const users = await Usuario.query().preload('rol').preload('empresa').orderBy('id', 'asc')
 
       return response.ok(users)
     } catch (error) {
-      console.error('Error al obtener usuarios:', error)
       return response.internalServerError({
         message: 'Error al obtener usuarios',
         error: error.message,
@@ -32,7 +28,6 @@ export default class UsuariosController {
 
       return response.ok(usuario)
     } catch (error) {
-      console.error('Error al obtener usuario por ID:', error)
       if (error.code === 'E_ROW_NOT_FOUND') {
         return response.notFound({ message: 'El usuario solicitado no fue encontrado.' })
       }
@@ -54,7 +49,6 @@ export default class UsuariosController {
 
       return response.created(user)
     } catch (error) {
-      console.error('Error al crear usuario:', error)
       return response.internalServerError({
         message: 'Error al crear usuario',
         error: error.message,
@@ -75,7 +69,6 @@ export default class UsuariosController {
 
       return response.ok(user)
     } catch (error) {
-      console.error('Error al actualizar usuario:', error)
       if (error.code === 'E_ROW_NOT_FOUND') {
         return response.notFound({ message: 'Usuario no encontrado para actualizar' })
       }
@@ -96,7 +89,6 @@ export default class UsuariosController {
         return response.notFound({ message: 'Usuario no encontrado' })
       }
 
-      console.error('Error al eliminar usuario:', error)
       return response.internalServerError({
         message: 'Error al eliminar usuario',
         error: error.message,
@@ -132,7 +124,7 @@ export default class UsuariosController {
   public async getTecnicos({ response }: HttpContext) {
     try {
       const tecnicos = await Usuario.query()
-        .select('id', 'nombre', 'apellido', 'rol_id') // Incluimos rol_id para evitar error de preload
+        .select('id', 'nombre', 'apellido', 'rol_id')
         .preload('rol')
         .whereHas('rol', (query) => {
           query.where('nombre', 'Técnico de soporte')
@@ -144,11 +136,8 @@ export default class UsuariosController {
         nombreCompleto: `${t.nombre} ${t.apellido}`,
       }))
 
-      console.log('*** USUARIOS CONTROLLER - Técnicos encontrados:', resultado)
-
       return response.ok(resultado)
     } catch (error) {
-      console.error('*** ERROR USUARIOS CONTROLLER - al obtener la lista de técnicos:', error.message)
       return response.internalServerError({
         message: 'Ocurrió un error al obtener la lista de técnicos.',
         error: error.message,
@@ -161,7 +150,6 @@ export default class UsuariosController {
       const empresas = await Empresa.query().orderBy('nombre', 'asc')
       return response.ok(empresas)
     } catch (error) {
-      console.error('Error al obtener empresas:', error)
       return response.internalServerError({
         message: 'Ocurrió un error al obtener la lista de empresas.',
         error: error.message,
@@ -174,7 +162,6 @@ export default class UsuariosController {
       const roles = await Rol.query().orderBy('nombre', 'asc')
       return response.ok(roles)
     } catch (error) {
-      console.error('Error al obtener roles:', error)
       return response.internalServerError({
         message: 'Ocurrió un error al obtener la lista de roles.',
         error: error.message,

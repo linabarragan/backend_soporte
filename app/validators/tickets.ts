@@ -18,10 +18,12 @@ export const crear = vine.compile(
     usuario_asignado_id: vine.number().positive().nullable().optional(), // puede no venir
 
     // ✨ Archivo adjunto es OPCIONAL al crear un ticket
-    archivo_adjunto: vine.file({
-      size: '5mb', // Tamaño máximo permitido de 5MB
-      extnames: ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx', 'xlsx', 'txt'], // Extensiones permitidas
-    }).optional(),
+    archivo_adjunto: vine
+      .file({
+        size: '5mb', // Tamaño máximo permitido de 5MB
+        extnames: ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx', 'xlsx', 'txt'], // Extensiones permitidas
+      })
+      .optional(),
   })
 )
 
@@ -46,10 +48,12 @@ export const actualizar = vine.compile(
 
     // ✨ Archivo adjunto es OPCIONAL al actualizar un ticket
     // Si se envía, VineJS lo validará. Si no se envía, no causará error.
-    archivo_adjunto: vine.file({
-      size: '5mb', // Tamaño máximo permitido de 5MB
-      extnames: ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx', 'xlsx', 'txt'], // Extensiones permitidas
-    }).optional(),
+    archivo_adjunto: vine
+      .file({
+        size: '5mb', // Tamaño máximo permitido de 5MB
+        extnames: ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx', 'xlsx', 'txt'], // Extensiones permitidas
+      })
+      .optional(),
   })
 )
 

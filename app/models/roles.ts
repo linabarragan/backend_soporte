@@ -19,7 +19,7 @@ export default class Rol extends BaseModel {
   @column()
   declare descripcion: string
 
-    @column()
+  @column()
   // ¡ESTE ES EL CAMBIO CLAVE!
   // Ahora TypeScript sabe que 'estado' es una cadena que puede ser 'activo' o 'inactivo'.
   declare estado: 'activo' | 'inactivo'
@@ -37,9 +37,9 @@ export default class Rol extends BaseModel {
 
   @manyToMany(() => Permiso, {
     pivotTable: 'roles_permisos_item', // Este es el nombre de tu tabla de unión.
-                                       // Asegúrate de que esta tabla exista y sea correcta.
-                                       // Si tu tabla de unión es 'rol_permiso_items', entonces esto debería ser 'rol_permiso_items'
-                                       // en lugar de 'roles_permisos_item'. ¡VERIFICA ESTO!
+    // Asegúrate de que esta tabla exista y sea correcta.
+    // Si tu tabla de unión es 'rol_permiso_items', entonces esto debería ser 'rol_permiso_items'
+    // en lugar de 'roles_permisos_item'. ¡VERIFICA ESTO!
   })
   declare permisos: ManyToMany<typeof Permiso>
 }

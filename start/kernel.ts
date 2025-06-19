@@ -37,7 +37,7 @@ server.use([
  */
 router.use([
   () => import('@adonisjs/core/bodyparser_middleware'),
-  // () => import('@adonisjs/auth/initialize_auth_middleware'), // <--- ¡ESTA LÍNEA DEBE SER COMENTADA O ELIMINADA!
+  () => import('@adonisjs/auth/initialize_auth_middleware')
 ])
 
 /**
@@ -48,6 +48,7 @@ router.use([
  * en las rutas específicas que lo necesiten.
  */
 export const middleware = router.named({
+  guest: () => import('#middleware/guest_middleware'),
   auth: () => import('#middleware/auth_middleware'),
   //auth_initialize: () => import('@adonisjs/auth/initialize_auth_middleware'), // Opcional: podrías definirlo aquí si prefieres
 })

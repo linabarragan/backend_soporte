@@ -99,7 +99,7 @@ export default class RolePermissionItemController {
 
     // 1. Validar que los IDs existen y son numéricos
     // Adonis valida los parámetros de ruta por defecto, pero una verificación explícita es buena.
-    if (!rolId || !itemId || isNaN(Number(rolId)) || isNaN(Number(itemId))) {
+    if (!rolId || !itemId || Number.isNaN(Number(rolId)) || Number.isNaN(Number(itemId))) {
       return response.badRequest({ message: 'IDs de rol e ítem inválidos o faltantes en la URL.' })
     }
 
@@ -113,10 +113,10 @@ export default class RolePermissionItemController {
         .delete()
 
       // 3. Responder al cliente
-      if (deletedRows > 0) {
+      if (Array.isArray(deletedRows) ? deletedRows.length > 0 : deletedRows > 0) {
         return response.ok({
-          message: `Se eliminaron ${deletedRows} asignaciones para el rol ${rolId} y el ítem ${itemId}.`,
-          deletedCount: deletedRows,
+          message: `Se eliminaron ${Array.isArray(deletedRows) ? deletedRows.length : deletedRows} asignaciones para el rol ${rolId} y el ítem ${itemId}.`,
+          deletedCount: Array.isArray(deletedRows) ? deletedRows.length : deletedRows,
         })
       } else {
         // Esto se ejecutará si no se encontraron asignaciones para esos IDs

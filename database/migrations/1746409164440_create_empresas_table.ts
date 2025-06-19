@@ -13,7 +13,7 @@ export default class extends BaseSchema {
       table.string('nit', 50).notNullable().unique()
       table.string('correo', 150).notNullable()
       table.string('telefono', 50).notNullable()
-      
+
       // *** AQUÍ SE AGREGA EL CAMPO 'estado' ***
       table.enum('estado', ['activo', 'inactivo']).defaultTo('activo').notNullable()
 

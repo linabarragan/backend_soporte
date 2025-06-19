@@ -38,11 +38,18 @@ export default class ComentariosController {
 
       if (ticket && ticket.creadorId) {
         // Carga la relación 'creador' para obtener su información y usarla en el mensaje de la notificación
-        await ticket.load('creador'); // Asegúrate de que tu modelo Ticket tenga esta relación definida
+        await ticket.load('creador') // Asegúrate de que tu modelo Ticket tenga esta relación definida
 
-        const nombreCreador = ticket.creador ? `${ticket.creador.nombre} ${ticket.creador.apellido}` : `Usuario ${ticket.creadorId}`;
-        const nombreQuienComento = await ComentarioTicket.query().where('id', comentario.id).preload('usuario').first();
-        const nombreUsuarioComentario = nombreQuienComento?.usuario ? `${nombreQuienComento.usuario.nombre} ${nombreQuienComento.usuario.apellido}` : `Usuario ${usuarioId}`;
+        //const nombreCreador = ticket.creador
+        //  ? `${ticket.creador.nombre} ${ticket.creador.apellido}`
+        //  : `Usuario ${ticket.creadorId}`
+        const nombreQuienComento = await ComentarioTicket.query()
+          .where('id', comentario.id)
+          .preload('usuario')
+          .first()
+        const nombreUsuarioComentario = nombreQuienComento?.usuario
+          ? `${nombreQuienComento.usuario.nombre} ${nombreQuienComento.usuario.apellido}`
+          : `Usuario ${usuarioId}`
 
         // 3. Enviar la notificación al creador del ticket
         await NotificacionesController.crearParaCreadorTicket({
@@ -55,7 +62,9 @@ export default class ComentariosController {
           // usuarioOrigenId: usuarioId
         })
       } else {
-        console.warn(`[ComentariosController] No se pudo enviar notificación: Ticket #${ticketId} no encontrado o sin creadorId.`)
+        console.warn(
+          `[ComentariosController] No se pudo enviar notificación: Ticket #${ticketId} no encontrado o sin creadorId.`
+        )
       }
 
       // 4. Cargar la relación 'usuario' para la respuesta del comentario si es necesario en el frontend
@@ -63,10 +72,12 @@ export default class ComentariosController {
 
       // 5. Devolver el comentario creado
       return response.created(comentario)
-
     } catch (error) {
       console.error('Error al guardar comentario:', error)
-      return response.internalServerError({ message: 'Error interno del servidor al crear el comentario', error: error.message })
+      return response.internalServerError({
+        message: 'Error interno del servidor al crear el comentario',
+        error: error.message,
+      })
     }
   }
 }
