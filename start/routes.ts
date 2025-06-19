@@ -10,7 +10,7 @@ const TicketsController = () => import('#controllers/tickets_controller')
 const EstadosTicketsController = () => import('#controllers/estados_tickets_controller') // Corregido: EstadosTicketsController
 const PrioridadesController = () => import('#controllers/Prioridades_Controller') // Corregido: PrioridadesController
 const CategoriasController = () => import('#controllers/Categorias_Controller') // Corregido: CategoriasController
-const ServiciosController = () => import('#controllers/Servicios_Controller ') // Corregido: ServiciosController
+const ServiciosController = () => import('#controllers/servicios_controller') // Corregido: ServiciosController
 const RolesController = () => import('#controllers/roles_controller')
 const PermisosController = () => import('#controllers/permiso_controller') // Corregido: PermisosController
 const ItemsController = () => import('#controllers/item_controller') // Corregido: ItemsController
